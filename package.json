@@ -1,0 +1,41 @@
+{
+  "name": "flylang",
+  "version": "0.0.1-alpha",
+  "description": "My first programing language compiler",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "cls && node ./tests/_tests.js",
+    "nodemon_test": "cls && nodemon ./tests/_tests.js",
+    "start": "cls && cd dist && node flylang.js ../tests/input.fly ../tests/output.py --langOutput=python",
+    "nodemon_start": "cls && cd dist && nodemon flylang.js ../tests/input.fly ../tests/output.py --langOutput=python",
+    "debug": "cls && cd dist && node flylang.js ../tests/input.fly ../tests/debugger.txt --langOutput=debugger --debugJsonFile=../tests/out.json",
+    "nodemon_debug": "cls && cd dist && nodemon flylang.js ../tests/input.fly ../tests/debugger.txt --langOutput=debugger --debugJsonFile=../tests/out.json",
+    "interpreter": "cls && cd dist && node flylang.js ../tests/input.fly",
+    "nodemon_interpreter": "cls && cd dist && nodemon flylang.js ../tests/input.fly",
+    "vanilla": "cls && cd dist && node flylang.js",
+    "tsbuild": "npx tsc && cls",
+    "tsbuild_watch": "npx tsc -w && cls",
+    "binnarize": "npx pkg dist/flylang.js -o bin/flylang -t node18 -c package.json --public"
+  },
+  "author": "Flymeth",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/marked-terminal": "^3.1.3",
+    "@types/node": "^18.11.10",
+    "pkg": "^5.8.0"
+  },
+  "pkg": {
+    "assets": [
+      "assets/**/*",
+      "./readme.md"
+    ],
+    "scripts": [
+      "dist/**/*.json",
+      "dist/**/*.js"
+    ]
+  },
+  "dependencies": {
+    "chalk": "4.1.2",
+    "marked-terminal": "^5.1.1"
+  }
+}

@@ -1,0 +1,10 @@
+fn required(variable,
+    |Need to be also imported|
+    return "Variable: &(variable)"
+)
+
+my_var: 15
+fn function1(
+    |Need to be imported|
+    return required(my_var)
+)

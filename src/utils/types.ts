@@ -1,0 +1,1 @@
+export type MakeRecurcive<rootType> = (rootType | MakeRecurcive<rootType>)[]

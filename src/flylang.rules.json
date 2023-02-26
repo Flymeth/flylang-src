@@ -1,0 +1,59 @@
+{
+    "end_of_instruction": [";", "\n"],
+    "trim_chars": [";", "\n", " ", "\r"],
+    "objects": {
+        "openner": ["{"],
+        "closer": ["}"]
+    },
+    "string": {
+        "openner": ["'", "\""],
+        "closer": ["'", "\""]
+    },
+    "block": {
+        "openner": ["("],
+        "closer": [")"]
+    },
+    "comments": {
+        "openner": ["|"],
+        "closer": ["|"]
+    },
+    "operations": [
+        {"name": "eucl_division", "symbol": "//"},
+        {"name": "power", "symbol": "**"},
+        {"name": "eucl_rest", "symbol": "%"},
+        {"name": "division", "symbol": "/"},
+        {"name": "multiplication", "symbol": "*"},
+        {"name": "substraction", "symbol": "-"},
+        {"name": "addition", "symbol": "+"}
+    ],
+    "stoppers": {
+        "fct_returns": "return",
+        "loop_breaks": "break",
+        "block_pass": "pass"
+    },
+    "comparaisons": {
+        "sup": ">=",
+        "inf": "<=",
+        "sup_strict": ">",
+        "inf_strict": "<",
+        "egual": "="
+    },
+    "boolean_symbols": {
+        "and": "&",
+        "nand": "^",
+        "or": "?",
+        "nor": "~",
+        "xor": "!"
+    },
+    "invertion_char": "!",
+    "string_data": {
+        "openner": "&(",
+        "closer": ")"
+    },
+    "attribute_access_char": ".",
+    "keywords": [
+        "if", "else", "for", "while",
+        "until", "cs", "fn", "new",
+        "import", "with", "in"
+    ]
+}

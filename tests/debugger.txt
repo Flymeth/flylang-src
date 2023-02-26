@@ -1,0 +1,19 @@
+#LOOP
+  TYPE: WHILE
+  CONTINUE WHILE: 
+    #NUMBER
+      VALUE: 1
+    #number
+  EXECUTION: 
+    #ATTRIBUTE_ACCESS
+      ORIGIN: 
+        #VARIABLE
+          NAME: std
+        #variable
+      ACCESS:
+        INDEX_VALUE: 
+          #FUNCTION_CALL
+            FUNCTION: out
+          #function_call
+    #attribute_access
+#loop
