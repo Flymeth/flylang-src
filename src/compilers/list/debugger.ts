@@ -147,7 +147,7 @@ function stringify(data: ParsedObject, defaultIndent= 0): (string | null)[] {
 const debug: CompilerTypeObject = {
     name: "debugger",
     version: 0.1,
-    exec(data, cache) {
+    exec(data, cache) {        
         const indent: number = cache?.indent || 0
         const indentationStr = " ".repeat(indent)
         if(data instanceof Array) return data.map(v => debug.exec(v, {indent})).join('\n' + indentationStr)

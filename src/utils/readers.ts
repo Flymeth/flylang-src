@@ -14,7 +14,7 @@ export class DotProperties {
         this.props = txt.split(/$/gm).map(txt => {
             const [key, value]= txt.split("=").map(e => e.trim())
             return {key, value}
-        }).filter(({key}) => !key.startsWith("#"))
+        }).filter(({key}) => key && !key.startsWith("#"))
     }
 
     get getProperties() {

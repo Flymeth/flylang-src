@@ -35,7 +35,7 @@ export default class AttrAccess extends CompilerObject {
         const access: AttrAccessReturn["data"]["access"] = []
         for await(const pos of data) {
             const obj = await Parser.parse(this.data, pos, variableAcceptedObjects(this.data))
-            if(!obj) throw new RaiseFlyLangCompilerError(fastSyntaxError(pos, "Invalid syntax for accessing to an attribute."))
+            if(!obj) throw new RaiseFlyLangCompilerError(fastSyntaxError(pos, "Invalid syntax for accessing to an attribute.")).raise()
             
             const fromScriptTester = pos.global.trim()
             access.push({

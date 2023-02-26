@@ -25,9 +25,10 @@ export function render(md: string, variables: {[key: string]: string} = {}, var_
     const content = mdParser.parse(md)
     console.info(content)
 }
-export default function accessToDoc(args: Arguments, props: DotProperties): void {
+export default function accessToDoc(args: Arguments, props: DotProperties): void {    
     if(args.getOptionValue('help')) return render(markdowns.help)
     else if(args.getOptionValue('syntax')) return render(markdowns.syntax)
     else if(args.getOptionValue('info')) return render(markdowns.main)
+    else if(args.getOptionValue('props')) return render(props.getProperties.map(({key, value}, index) => `[${index + 1}]> *${key}* = **${value}**`).join('\r\n'))
     else console.log("ERROR => Invalid argument.");
 }

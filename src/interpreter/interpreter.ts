@@ -11,13 +11,14 @@ import { NumberReturn } from "../parser/objects/number.js"
 import { DictObjectReturn } from "../parser/objects/object.js"
 import { StrictValueReturn } from "../parser/objects/strict_value.js"
 import { StringReturn } from "../parser/objects/string.js"
-import { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
+import Parser, { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
 import Positioner from "../utils/positioner.js"
 import {Interface, createInterface} from "readline"
 import stringify from "./stringify.js"
 import AccessError from "../errors/interpreter/accessError.js"
-// import util from "util";
+import util from "util";
 import ExecutionError from "../errors/interpreter/executionError.js"
+import { AttrAccessReturn } from "../parser/objects/attr_access.js"
 
 export type methodObject<obj extends ParsableObjectList["data"]> = {
     variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
@@ -44,7 +45,8 @@ export type cacheInterface = {
     functionsDepth: {
         max: number,
         list: {[key: string]: number}
-    }
+    },
+    workingAttrAccess?: AttrAccessReturn["data"]
 }
 export const UNDEFINED_TYPE: StrictValueReturn = {type: "strict_value", data: {value: null}}
 
@@ -70,7 +72,14 @@ export default class Interpreter {
                 variables: {},
                 functions: {
                     async clone(...args) {
-                        const obj = await interpMethods.eval(args[0])
+                        let obj = await interpMethods.eval(args[0])
+                        if(obj.type === "array") {
+                            obj.data.values = await Promise.all(obj.data.values.map(async (e) => await interpMethods.cache.builtin.functions.clone(e)))
+                        } else if(obj.type === "object") {
+                            obj.data.values = await Promise.all(
+                                obj.data.values.map(async (e) => ({...e, value: await interpMethods.eval(e.value)}))
+                            )
+                        }
                         return JSON.parse(JSON.stringify(obj))
                     },
                     async range(fromObj, toObj, stepObj, ..._) {
@@ -100,6 +109,14 @@ export default class Interpreter {
                     async typeof(obj, ..._) {
                         obj = await interpMethods.eval(obj)
                         return {type: "string", data: [{type: "text", data: obj.type}]}
+                    },
+                    async eval(str, ..._) {
+                        if(str.type !== "string") return UNDEFINED_TYPE
+                        const strContent = (await interpMethods.eval(str) as StringReturn).data[0].data as string
+                        const p = new Parser({type: "manualy", data: interpMethods.data})
+                        const parsed = await p.compile(strContent)
+                        if(!parsed) return UNDEFINED_TYPE
+                        return interpMethods.eval(parsed.content[0])
                     }
                 },
                 objects: {
@@ -108,14 +125,14 @@ export default class Interpreter {
                             variables: {},
                             functions: {
                                 async in(...args) {
-                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v)))).join('')
+                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, true)))).join('')
                                     interpMethods.linereader.resume()
                                     const ans = await new Promise<string>(res => interpMethods.linereader.question(dataStr, res))
                                     interpMethods.linereader.pause()
                                     return {type: "string", data: [{type: "text", data: ans}]}
                                 },
                                 async out(...args) {
-                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v)))).join(' ')
+                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, true)))).join(' ')
                                     interpMethods.linereader.resume()
                                     interpMethods.linereader.write(dataStr + "\n")
                                     interpMethods.linereader.pause()
@@ -201,13 +218,19 @@ export default class Interpreter {
     private async evalFunction(fct: FunctionAsignationReturn["data"], parameters: ParsableObjectList[]): Promise<ParsableObjectList | void> {        
         const {arguments: args} = fct
         
-        if((args?.length || 0) !== parameters.length) throw new RaiseFlyLangCompilerError(new FunctionError(this.currentPosition, `"${fct.name}" requires ${fct.arguments?.length || "no"} arguments but ${arguments.length} has been given.`)).raise()
+        if((args?.length || 0) < parameters.length) throw new RaiseFlyLangCompilerError(new FunctionError(this.currentPosition, `"${fct.name}" requires ${fct.arguments?.length || "no"} arguments but ${arguments.length} has been given.`)).raise()
         
-        fct.arguments?.forEach((name, index) => {
-            this.cache.registered.variables[name]= {editable: true, value: parameters[index]}
+        const scopeArguments: cacheInterface["registered"] = {
+            functions: {},
+            objects: {},
+            variables: {}
+        }
+
+        args?.forEach((name, index) => {
+            scopeArguments.variables[name]= {editable: true, value: parameters[index] || UNDEFINED_TYPE}
         })
 
-        let res = await this.process(fct.code, false)
+        let res = await this.process(fct.code, false, true, scopeArguments)
         if(res?.type === "stopper" && res.data.type === "fct_returns") res= await this.eval(res.data.return || UNDEFINED_TYPE)
 
         return res
@@ -238,6 +261,10 @@ export default class Interpreter {
         return true
     }
 
+    /**
+     * Execute an instructino
+     * @param instruction The instruction to execute
+     */
     async eval(instruction: ParsedObject): Promise<ParsableObjectList> {
         this.currentPosition = new Positioner(this.data.file.src.content || "", undefined, this.data.file.src.path)
         if(instruction.map) this.currentPosition.indexes= instruction.map        
@@ -259,12 +286,11 @@ export default class Interpreter {
                 }
 
                 if(data.name in variables) {
-                    const v = variables[data.name]
+                    const v = variables[data.name]                    
                     if(typeof v !== "function") {
                         if(v.value.type === "variable") return await this.eval(v.value)
                         else return v.value
-                    }
-                    else return await v()
+                    } else return await v()
                 }else if(data.name in functions) {
                     const v = functions[data.name]
                     if(typeof v !== "function") return {type: "function_asignation", data: v}
@@ -309,6 +335,7 @@ export default class Interpreter {
             }
             case "variable_asignation": {
                 const {constant, value, variable} = data
+
                 if(variable.type === "variable") {
                     if(this.cache.registered.variables[variable.data.name]?.editable === false) throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition)).raise()
                     
@@ -330,6 +357,26 @@ export default class Interpreter {
                             await this.eval({type: "variable_asignation", data: {variable, value: values[index], constant}})
                         }
                     }
+                }else if(variable.type === "attribute_access") {
+                    const [keyObject, accesser] = [variable.data.access.at(-1), variable.data.access.slice(0, -1)]
+                    const objectWhereDefine = accesser.length ? await this.eval({type: "attribute_access", data: {...variable.data, access: accesser}}) : await this.eval(variable.data.origin.object)
+                    
+                    const key = keyObject?.fromScript ? await this.eval(keyObject.object) : keyObject?.object
+                    if(objectWhereDefine.type === "array" && key?.type === "number") {
+                        const index = key.data.number < 0 ? objectWhereDefine.data.values.length - key.data.number : key.data.number
+                        objectWhereDefine.data.values[index] = await this.eval(value || UNDEFINED_TYPE)
+                    }else if(objectWhereDefine.type === "object") {                        
+                        const name = (
+                            key?.type === "variable" ? key.data.name :
+                            key?.type === "string" ? stringify(await this.eval(key)) :
+                            key?.type === "number" ? key.data.number.toString() : null
+                        )
+                        if(!name) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, "Invalid key provided.")).raise()
+
+                        let index = objectWhereDefine.data.values.findIndex(e => e.key === name)
+                        if(index < 0) (index = objectWhereDefine.data.values.length), objectWhereDefine.data.values.push({key: name, value: UNDEFINED_TYPE})
+                        objectWhereDefine.data.values[index].value = await this.eval(value || UNDEFINED_TYPE)
+                    }else throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `"${stringify(key || UNDEFINED_TYPE)}" doesn't exist on the object.`)).raise()
                 }
                 return UNDEFINED_TYPE
             }
@@ -539,6 +586,9 @@ export default class Interpreter {
                 const firstAccessor = access[0]
                 if(!firstAccessor) return origin.object
 
+                const deleteAttrCache = !this.cache.workingAttrAccess
+                if(deleteAttrCache) this.cache.workingAttrAccess = data
+
                 const originValue = await this.eval(origin.object)
                 const litteralValue = origin.fromScript ? originValue : origin.object
                 const accessValue = firstAccessor.fromScript ? await this.eval(firstAccessor.object) : firstAccessor.object
@@ -562,9 +612,8 @@ export default class Interpreter {
                         stringify(accessValue)
                     )
                     
-                    const item = originValue.data.values.find(k => k.key === keyName)
-                    if(!item) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `"${keyName}" has not been found in this object.`)).raise()
-                    returnsValue = await this.eval(item.value)
+                    const value = originValue.data.values.find(k => k.key === keyName)?.value || UNDEFINED_TYPE
+                    returnsValue = await this.eval(value)
 
                     if(accessValue.type === "function_call") {
                         if(returnsValue.type !== "function_asignation") throw new RaiseFlyLangCompilerError(new FunctionError(this.currentPosition, `"${keyName}" is not a function!`)).raise()
@@ -573,11 +622,17 @@ export default class Interpreter {
                 } else if(litteralValue.type === "variable" && (litteralValue.data.name in classes)) { // Access to a class method/property
                     const classMethods = classes[litteralValue.data.name]
                     if(accessValue.type === "variable") {
-                        const {variables} = classMethods.data
+                        const {variables, functions} = classMethods.data
                         if(accessValue.data.name in variables) {
                             const v = variables[accessValue.data.name]
                             if(typeof v === "function") returnsValue = await v()
                             else returnsValue = v.value
+                        }else if((accessValue.data.name in functions) && this.cache.workingAttrAccess) {
+                            const v = functions[accessValue.data.name]
+                            if(typeof v === "function") {
+                                this.cache.builtin.functions[`//builtin_${accessValue.data.name}`] = v
+                                returnsValue = await this.eval({type: "variable", data: {name: `//builtin_${accessValue.data.name}`}})
+                            }else returnsValue = {type: "function_asignation", data: v}
                         }
                     }else if(accessValue.type === "function_call") {
                         const {functions} = classMethods.data
@@ -607,7 +662,9 @@ export default class Interpreter {
                     }
                 }
                 if(!returnsValue) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `Invalid attribute/method for a ${originValue.type}.`)).raise()
-                if(access.length - 1) return await this.eval({type: "attribute_access", data: {origin: {fromScript: false, object: returnsValue}, access: access.slice(1)}})
+                if(access.length - 1) returnsValue = await this.eval({type: "attribute_access", data: {origin: {fromScript: false, object: returnsValue}, access: access.slice(1)}})
+                if(returnsValue.type === "variable") returnsValue = await this.eval(returnsValue)
+                if(deleteAttrCache) delete this.cache.workingAttrAccess
                 return returnsValue
             }
             case "loop": {
@@ -626,9 +683,10 @@ export default class Interpreter {
                     if(iteratorArray === null) throw new RaiseFlyLangCompilerError(new ExecutionError(this.currentPosition, "The given iterator type is invalid.")).raise()
                     if(iteratorArray.length >= maxLoopIteration) throw new RaiseFlyLangCompilerError(new ExecutionError(this.currentPosition, `Iterator length is above iteration limit (${maxLoopIteration}).`)).raise()
 
-                    const fct = await this.eval(executor)
+                    const fct = await this.eval(executor)                    
                     if(fct.type !== "function_asignation") throw new RaiseFlyLangCompilerError(new ExecutionError(this.currentPosition, "An invalid function has been given for a 'for' loop.")).raise()
-                    if(skipNoCodeLoops && !fct.data.code.length) return UNDEFINED_TYPE
+                    const isBuiltinFct = fct.data.name?.startsWith('//builtin')
+                    if(skipNoCodeLoops && !(fct.data.code.length || isBuiltinFct)) return UNDEFINED_TYPE
 
                     let index = 0
                     while(index < iteratorArray.length) {
@@ -637,10 +695,14 @@ export default class Interpreter {
                         if(typeof value === "string") value= {type: "string", data: [{type: "text", data: value}]}
                         const fctArgs: ParsableObjectList[] = [
                             value, {type: "number", data: {number: index, negative: false, type: "integer"}} as NumberReturn // Typescript compiler doesn't recognize it (but intelisence does)
-                        ].slice(0, fct.data.arguments?.length || 0)
+                        ].slice(0, fct.data.arguments?.length || (isBuiltinFct ? 2 : 0))
                         
-                        const res = await this.evalFunction(fct.data, fctArgs)
-                        if(res?.type === "stopper") return res
+                        if(isBuiltinFct && fct.data.name) {
+                            await this.cache.builtin.functions[fct.data.name](...fctArgs)
+                        }else {
+                            const res = await this.evalFunction(fct.data, fctArgs)
+                            if(res?.type === "stopper") return res
+                        }
                         index++
                     }
 
@@ -674,6 +736,14 @@ export default class Interpreter {
 
                 return UNDEFINED_TYPE
             }
+            case "object": {
+                for await(const e of data.values) await this.eval(e.value)
+                break;
+            }
+            case "array": {
+                for await(const e of data.values) await this.eval(e)
+                break;
+            }
             case "comment": {
                 return UNDEFINED_TYPE
             }
@@ -681,12 +751,29 @@ export default class Interpreter {
         return instruction
     }
 
-    async process(instructions: ParserReturn["content"], allowNotStopperResult= true, incrementScope = true): Promise<ParsableObjectList | void> {
+    /**
+     * Execute in order a lisst of instruction
+     * @param instructions An array of instruction to execute
+     * @param allowNotStopperResult If the interpreter coulds return other type that a stopper (default: `true`)
+     * @param incrementScope If true, after the execution of the process the interpreter will delete all created variables/functions/...
+     * @param scopeVariables The cache variable to set unicly in this scope
+     */
+    async process(instructions: ParserReturn["content"], allowNotStopperResult= true, incrementScope = true, scopeVariables: cacheInterface["registered"] = {variables: {}, functions: {}, objects: {}}): Promise<ParsableObjectList | void> {
         let result: ParsableObjectList | undefined = undefined
 
         const saveVars = Object.keys(this.cache.registered.variables)
         const saveFcts = Object.keys(this.cache.registered.functions)
         const saveClass = Object.keys(this.cache.registered.objects)
+
+        for(const name in scopeVariables.variables) {
+            this.cache.registered.variables[name] = scopeVariables.variables[name]
+        }
+        for(const name in scopeVariables.functions) {
+            this.cache.registered.functions[name] = scopeVariables.functions[name]
+        }
+        for(const name in scopeVariables.objects) {
+            this.cache.registered.objects[name] = scopeVariables.objects[name]
+        }
 
         // Instructions execution
         if(instructions.length) {
@@ -704,8 +791,8 @@ export default class Interpreter {
             }
         }
 
+        if(result?.type === "stopper") result= {type: "stopper", data: {...result.data, return: await this.eval(result.data.return || UNDEFINED_TYPE)}}
         if(incrementScope) { // Deletes only if scope has been incremented
-
             // Delete local variables/functions/classes from cache
             for(const name in this.cache.registered.variables) {
                 if(!saveVars.includes(name)) delete this.cache.registered.variables[name]

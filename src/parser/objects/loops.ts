@@ -10,6 +10,7 @@ import { variableAcceptedObjects } from "../../utils/registeries.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
 import Stopper from "./stoppers.js";
+import AttrAccess, { AttrAccessReturn } from "./attr_access.js";
 
 const loop_types = ["while", "until", "for"]
 
@@ -22,7 +23,7 @@ export type LoopsReturn = {
     } | {
         type: "for",
         iterator: ParsableObjectList,
-        executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn
+        executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn | AttrAccessReturn
     }
 }
 export default class Loops extends CompilerObject {
@@ -61,9 +62,9 @@ export default class Loops extends CompilerObject {
             
             //@ts-ignore TS can't understand that is just the given class that will parse the code that I give.
             const executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn | null = await FlyLang.parse(this.data, secondArg, [
-                new FunctionAsignation(this.data), new Variable(this.data), new FunctionCall(this.data)
+                new FunctionAsignation(this.data), new Variable(this.data), new FunctionCall(this.data), new AttrAccess(this.data)
             ])
-            if(!executor) throw new RaiseFlyLangCompilerError(fastSyntaxError(secondArg))
+            if(!executor) throw new RaiseFlyLangCompilerError(fastSyntaxError(secondArg)).raise()
 
             return {
                 type: "loop",
