@@ -1,11 +1,11 @@
-import mdParser from "marked";
+import marked from "marked";
 import terminalMdParser from "marked-terminal";
 import { Arguments, DotProperties } from "./utils/readers.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { RegExp_AND } from "./utils/tools/regExpTools.js";
 
-mdParser.setOptions({
+marked.setOptions({
     renderer: new terminalMdParser({
         tab: 2
     })
@@ -22,7 +22,7 @@ export function render(md: string, variables: {[key: string]: string} = {}, var_
         md = md.replaceAll(new RegExp(`${RegExp_AND([var_prefix])}\\s*${name}\\s*${RegExp_AND([var_suffix])}`), variables[name])
     }
 
-    const content = mdParser.parse(md)
+    const content = marked.parse(md)
     console.info(content)
 }
 export default function accessToDoc(args: Arguments, props: DotProperties): void {    

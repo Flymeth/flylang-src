@@ -1,5 +1,5 @@
 import { MakeRecurcive } from "../types.js";
-import rules from "../../flylang.rules.json";
+import { langRules as rules } from "../registeries.js";
 import safeSplit from "./safeSplit.js";
 import { multipleEndsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";

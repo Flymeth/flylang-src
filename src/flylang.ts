@@ -16,12 +16,7 @@ const properties = new DotProperties(join(binMode ? dirname(process.execPath) : 
 const flyLangFilePath = args.getArgument(0)
 const flyLangOutPath = args.getArgument(1)
 
-!(async () => {
-    if(!flyLangFilePath) {
-        if(!(args.arguments.length + args.options.length)) return console.log("In-console mode is not implemented yet.");
-        return accessToDoc(args, properties)
-    }
-    
+!(async () => {    
     const parser = new FlyLang({
         type: "auto",
         properties, 
@@ -31,6 +26,11 @@ const flyLangOutPath = args.getArgument(1)
             out: join(process.cwd(), flyLangOutPath || "")
         } : undefined
     });
+
+    if(!flyLangFilePath) {
+        if(!(args.arguments.length + args.options.length)) return new Interpreter(parser.data, true)
+        return accessToDoc(args, properties)
+    }
 
     const oLang = args.getOptionValue('langOutput')
     const jsonParsed = await parser.compile()
@@ -54,6 +54,8 @@ const flyLangOutPath = args.getArgument(1)
         } catch (e) {}
     }else {
         const interpreter = new Interpreter(parser.data)
-        const out= await interpreter.process(jsonParsed.content)        
+        await interpreter.process(jsonParsed.content)
+        
+        if(properties.getValue("inConsoleModeWhenFileExecuted")?.value === "1") interpreter.start_InConsoleMode()
     }
 })()

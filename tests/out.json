@@ -4,136 +4,6 @@
   },
   "content": [
     {
-      "type": "variable_asignation",
-      "data": {
-        "variable": {
-          "type": "variable",
-          "data": {
-            "name": "obj"
-          }
-        },
-        "constant": false,
-        "value": {
-          "type": "object",
-          "data": {
-            "values": [
-              {
-                "key": "test",
-                "value": {
-                  "type": "object",
-                  "data": {
-                    "values": [
-                      {
-                        "key": "test2",
-                        "value": {
-                          "type": "array",
-                          "data": {
-                            "values": [
-                              {
-                                "type": "number",
-                                "data": {
-                                  "type": "integer",
-                                  "negative": false,
-                                  "number": 0
-                                }
-                              },
-                              {
-                                "type": "number",
-                                "data": {
-                                  "type": "integer",
-                                  "negative": false,
-                                  "number": 1
-                                }
-                              },
-                              {
-                                "type": "number",
-                                "data": {
-                                  "type": "integer",
-                                  "negative": false,
-                                  "number": 2
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "map": [
-        0,
-        33
-      ]
-    },
-    {
-      "type": "variable_asignation",
-      "data": {
-        "variable": {
-          "type": "attribute_access",
-          "data": {
-            "origin": {
-              "fromScript": false,
-              "object": {
-                "type": "variable",
-                "data": {
-                  "name": "obj"
-                }
-              }
-            },
-            "access": [
-              {
-                "fromScript": false,
-                "object": {
-                  "type": "variable",
-                  "data": {
-                    "name": "test"
-                  }
-                }
-              },
-              {
-                "fromScript": false,
-                "object": {
-                  "type": "variable",
-                  "data": {
-                    "name": "test2"
-                  }
-                }
-              },
-              {
-                "fromScript": false,
-                "object": {
-                  "type": "number",
-                  "data": {
-                    "type": "integer",
-                    "negative": false,
-                    "number": 1
-                  }
-                }
-              }
-            ]
-          }
-        },
-        "constant": false,
-        "value": {
-          "type": "number",
-          "data": {
-            "type": "integer",
-            "negative": false,
-            "number": 95
-          }
-        }
-      },
-      "map": [
-        33,
-        55
-      ]
-    },
-    {
       "type": "attribute_access",
       "data": {
         "origin": {
@@ -154,9 +24,31 @@
                 "name": "out",
                 "arguments": [
                   {
-                    "type": "variable",
+                    "type": "attribute_access",
                     "data": {
-                      "name": "obj"
+                      "origin": {
+                        "fromScript": true,
+                        "object": {
+                          "type": "number",
+                          "data": {
+                            "type": "float",
+                            "negative": false,
+                            "number": 2.5
+                          }
+                        }
+                      },
+                      "access": [
+                        {
+                          "fromScript": false,
+                          "object": {
+                            "type": "function_call",
+                            "data": {
+                              "name": "asStr",
+                              "arguments": []
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 ]
@@ -166,8 +58,8 @@
         ]
       },
       "map": [
-        57,
-        69
+        0,
+        22
       ]
     }
   ]

@@ -1,10 +1,10 @@
-fn required(variable,
-    |Need to be also imported|
-    return "Variable: &(variable)"
+fn add(a, b,
+    return a + b
 )
 
-my_var: 15
-fn function1(
-    |Need to be imported|
-    return required(my_var)
+fn mul(a, b,
+    if(a = 0 ? b = 0,
+        return 0
+    )
+    return add(a, mul(a, b - 1))
 )

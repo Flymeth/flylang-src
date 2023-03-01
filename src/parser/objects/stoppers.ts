@@ -1,7 +1,6 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
-import rules from "../../flylang.rules.json";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import Positioner from "../../utils/positioner.js";
 
 type rulesStoppersKeys= keyof (typeof rules.stoppers)
@@ -24,7 +23,7 @@ export default class Stopper extends CompilerObject {
             detailed: new RegExp(`(?<type>${code_type.join("|")})(?:[ \\t]+(?<data>.+))?`, "s")
         })
 
-        this.bonus_score+= 1
+        this.bonus_score+= 2
     }
 
     async parse(code: Positioner): Promise<StopperReturn | null> {
@@ -38,8 +37,8 @@ export default class Stopper extends CompilerObject {
         //@ts-ignore Trust me
         const type_name: rulesStoppersKeys = Object.keys(rules.stoppers)[index]
 
-        const return_code = code.take(data)
-        const parsedData = data ? await FlyLang.parse(this.data, return_code, variableAcceptedObjects(this.data)) : null
+        const return_code = data ? code.take(data) : null
+        const parsedData = return_code ? await FlyLang.parse(this.data, return_code, variableAcceptedObjects(this.data)) : null
         if(data && !parsedData) return null
 
         return {

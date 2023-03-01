@@ -1,56 +1,3 @@
-#VARIABLE_ASIGNATION
-  STORED IN: 
-    #VARIABLE
-      NAME: obj
-    #variable
-  VALUE: 
-    #OBJECT
-      #0 => KEY: test; VALUE: 
-        #OBJECT
-          #0 => KEY: test2; VALUE: 
-            #ARRAY
-              
-                #NUMBER
-                  VALUE: 0
-                #number
-              
-                #NUMBER
-                  VALUE: 1
-                #number
-              
-                #NUMBER
-                  VALUE: 2
-                #number
-            #array
-        #object
-    #object
-#variable_asignation
-#VARIABLE_ASIGNATION
-  STORED IN: 
-    #ATTRIBUTE_ACCESS
-      ORIGIN: 
-        #VARIABLE
-          NAME: obj
-        #variable
-      ACCESS:
-        INDEX_VALUE: 
-          #VARIABLE
-            NAME: test
-          #variable
-        INDEX_VALUE: 
-          #VARIABLE
-            NAME: test2
-          #variable
-        INDEX_VALUE: 
-          #NUMBER
-            VALUE: 1
-          #number
-    #attribute_access
-  VALUE: 
-    #NUMBER
-      VALUE: 95
-    #number
-#variable_asignation
 #ATTRIBUTE_ACCESS
   ORIGIN: 
     #VARIABLE
@@ -61,8 +8,16 @@
       #FUNCTION_CALL
         FUNCTION: out
         ARGUMENTS: 
-          #VARIABLE
-            NAME: obj
-          #variable
+          #ATTRIBUTE_ACCESS
+            ORIGIN: 
+              #NUMBER
+                VALUE: 2.5
+              #number
+            ACCESS:
+              INDEX_VALUE: 
+                #FUNCTION_CALL
+                  FUNCTION: asStr
+                #function_call
+          #attribute_access
       #function_call
 #attribute_access

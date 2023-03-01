@@ -1,11 +1,11 @@
 import Parser, { ParsableObjectList, ParsedObject, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import Positioner from "../../utils/positioner.js";
-import {string, string_data} from "../../flylang.rules.json";
 import safeSplit from "../../utils/tools/safeSplit.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
+const {string, string_data} = rules
 
 export type StringReturn = {
     type: "string",

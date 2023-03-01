@@ -1,5 +1,5 @@
 import safeSplit from "./safeSplit.js";
-import rules from "../../flylang.rules.json";
+import { langRules as rules } from "../registeries.js";
 import { multipleEndsWith, multipleSearch, multipleStartsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";
 import { CommentaryRegexps } from "../../parser/objects/comment.js";

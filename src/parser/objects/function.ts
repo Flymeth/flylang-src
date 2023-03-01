@@ -19,7 +19,7 @@ export default class FunctionCall extends CompilerObject {
     constructor(data: ParserClassData) {
         const {fast} = new Variable(data).regexps
         super(data, "function_call", `foo()`, {
-            fast: new RegExp(fast.source + '\\(.*\\)', "si"),
+            fast: new RegExp(fast.source + '\\(.*?\\)', "si"),
             detailed: /(?<name>(?:[a-z_])(?<!\.)\w*)\((?<arguments>.*)\)/si
         })
     }
@@ -31,7 +31,7 @@ export default class FunctionCall extends CompilerObject {
                 args= details.groups?.arguments
         ;
 
-        const argsPosition = code.take(args)        
+        const argsPosition = code.take(args)
         const splitedArgs = safeSplit(argsPosition.split(), [","], false, undefined)
         if(!splitedArgs) return new RaiseFlyLangCompilerError(createSplitError(argsPosition)).raise()
         

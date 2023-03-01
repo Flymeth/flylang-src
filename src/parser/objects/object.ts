@@ -1,10 +1,9 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import CompilerObject from "./_object.js";
-import rules from "../../flylang.rules.json";
 import safeSplit from "../../utils/tools/safeSplit.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
 

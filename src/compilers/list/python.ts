@@ -34,7 +34,7 @@ const python: CompilerTypeObject = {
                 }
             }
             case "comment": {
-                return `"""${data.data}"""`
+                return `"""${data.data.message}"""`
             }
             case "comparaison": {
                 const {comparaison, operators} = data.data
@@ -108,6 +108,7 @@ const python: CompilerTypeObject = {
                         executor.type === "function_asignation" ? executor.data.arguments?.[i] || genAleaName()
                         : genAleaName()
                     ))
+                    args.reverse()
 
                     return `for ${args.join(',')} in enumerate(${parsedIterator}):${(
                         executor.type === "variable" ? `${python.exec(executor, cache)}(${args.join(',')})` :
@@ -190,7 +191,7 @@ const python: CompilerTypeObject = {
             case "attribute_access": {
                 const attrs = data.data
                 const obj = python.exec(attrs.origin.object, cache)
-                
+
                 if(cache.objects instanceof Array && cache.objects.includes(obj)) {
                     return `${obj}${attrs.access.map(e => `[${e.fromScript || e.object.type === "number" ? python.exec(e.object, cache) : `"${python.exec(e.object, cache)}"`}]`).join('')}`
                 }else return `${obj}.${attrs.access.map(e => python.exec(e.object, cache)).join('.')}`

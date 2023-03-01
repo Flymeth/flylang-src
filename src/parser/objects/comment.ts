@@ -1,8 +1,8 @@
 import { ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
-import rules from "../../flylang.rules.json";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import Positioner from "../../utils/positioner.js";
+import { langRules as rules } from "../../utils/registeries.js"
 
 export type CommentaryReturn = {
     type: "comment",

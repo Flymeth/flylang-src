@@ -1,10 +1,9 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
-import rules from "../../flylang.rules.json";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import safeSplit, { createSplitError } from "../../utils/tools/safeSplit.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import Positioner from "../../utils/positioner.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 
@@ -22,7 +21,6 @@ export const ArrayRegExps = {
     fast: new RegExp(`${opener.source}.*${closer.source}`, "si"),
     detailed: new RegExp(`${opener.source}(?<items>.*)${closer.source}`, "si")
 }
-
 export default class Array extends CompilerObject {
     restrictedWith?: CompilerObject[]
 

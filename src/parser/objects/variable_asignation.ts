@@ -1,11 +1,10 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import SyntaxError, { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import CompilerObject from "./_object.js";
 import FunctionAsignation from "./function_asignation.js";
 import Positioner from "../../utils/positioner.js";
-import rules from "../../flylang.rules.json";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
 import { multipleEndsWith } from "../../utils/tools/extremityTester.js";
@@ -31,6 +30,7 @@ export default class VariableAsignation extends CompilerObject {
             fast: new RegExp(`.+?\\s*(?:${operaters.source}|:)?\\s*:\\s*.*`, "s"),
             detailed: new RegExp(`(?<name>.+?)\\s*((?<operand>${operaters.source})|(?<constant>:))?\\s*:\\s*(?<value>.+)`, "s")
         })
+        this.bonus_score+= 1
     }
 
     async parse(code: Positioner): Promise<VariableAsignationReturn | null> {

@@ -1,9 +1,8 @@
 import Parser, { ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
-import rules from "../../flylang.rules.json";
 import Positioner from "../../utils/positioner.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
-import { variableAcceptedObjects } from "../../utils/registeries.js";
+import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import { multipleEndsWith, multipleStartsWith } from "../../utils/tools/extremityTester.js";
@@ -37,7 +36,8 @@ export default class AttrAccess extends CompilerObject {
             const obj = await Parser.parse(this.data, pos, variableAcceptedObjects(this.data))
             if(!obj) throw new RaiseFlyLangCompilerError(fastSyntaxError(pos, "Invalid syntax for accessing to an attribute.")).raise()
             
-            const fromScriptTester = pos.global.trim()
+            let fromScriptTester = pos.global.trim()
+            if(fromScriptTester.endsWith('.')) fromScriptTester = fromScriptTester.slice(0, fromScriptTester.length - 1)
             access.push({
                 fromScript: !!(multipleStartsWith(fromScriptTester, rules.block.openner) && multipleEndsWith(fromScriptTester, rules.block.closer)),
                 object: obj

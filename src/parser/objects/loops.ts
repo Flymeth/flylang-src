@@ -33,7 +33,7 @@ export default class Loops extends CompilerObject {
             fast: new RegExp(`${typesReg.source}\\s*\\(.+\\)`, "s"),
             detailed: new RegExp(`(?<type>${typesReg.source})\\s*\\((?<inputs>.+)\\)`, "s")
         })
-        this.bonus_score+= 1
+        this.bonus_score+= 2
     }
 
     async parse(code: Positioner): Promise<LoopsReturn | null> {

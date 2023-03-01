@@ -39,7 +39,7 @@ factorialOf: std.in("!").asNbr()
 std.cls()
 
 out: 1
-for(range(factorialOf), fn(v,
+for(range(1, factorialOf +1), fn(v,
     out*: v
 ))
 std.out("!&(factorialOf) = &(out)")
@@ -54,6 +54,7 @@ property | description | default
 maxRecurtionDepth | The maximum times that a function can calls them-self | 120
 maxLoopIteration | The maximum loop iterations number | 300
 autoSkipUseless | If yes (`1`) or no (`0`) flylang will skip what it thinks as useless code | 0 (`no`)
+inConsoleModeWhenFileExecuted | When a file is executed, if at the end of execution interpreter starts a new InConsole session | 0 (`no`)
 
 > *Please note that each propery value must be a number*
 > *Deleting this file will make flylang not working*

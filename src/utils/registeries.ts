@@ -1,10 +1,12 @@
+import rules from "../flylang.rules.json"; // This must be as topiest as possible because else nodejs imports recurcively things.
+export const langRules = rules
+
 import { ParsableObjectInformations, ParsableObjectList, ParserClassData } from "../parser/parser.js";
 import Error from "../errors/_error.js";
 import SyntaxError from "../errors/code/SyntaxError.js";
 import PathError from "../errors/compiler/PathError.js";
 import UnknowError from "../errors/compiler/UnknowError.js";
 import RaiseFlyLangCompilerError from "../errors/raiseError.js";
-import rules from "../flylang.rules.json";
 import Array from "../parser/objects/array.js";
 import BooleanTest from "../parser/objects/boolean.js"; 
 import Comparaison from "../parser/objects/comparaison.js";
@@ -21,7 +23,6 @@ import ClassInstanciation from "../parser/objects/class_instanciation.js";
 import VariableAsignation, { VariableAsignationReturn } from "../parser/objects/variable_asignation.js";
 import ClassConstr, { ClassConstrReturn } from "../parser/objects/class_construct.js";
 
-export const langRules = rules
 export function variableAcceptedObjects(data: ParserClassData) {
     return [
         new Array(data), new BooleanTest(data), new Comparaison(data), new FunctionAsignation(data), new FunctionCall(data),

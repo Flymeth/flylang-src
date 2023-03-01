@@ -7,7 +7,7 @@ import Parser, { ParserReturn, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import String, { StringReturn } from "./string.js";
 import Variable, { VariableReturn } from "./variable.js";
-import rules from "../../flylang.rules.json";
+import { langRules as rules } from "../../utils/registeries.js";
 import { join, parse } from "path";
 import { exportableObjects, exportableObjectsName } from "../../utils/registeries.js"
 import { StringTools } from "../../utils/tools/stringTools.js";
@@ -33,13 +33,13 @@ export type ImportaterReturn = {
     })
 }
 export const ImportaterRegExps = {
-    fast: new RegExp(`import\\s+(?:(?:(?<str_char>[${rules.string.openner.join('')}]).*\\k<str_char>)|\\w+)(?:\\s+with\\s+(?:[${rules.block.openner.join('')}].*[${rules.block.closer}]|\\*))?(?:\\s+in\\s+[a-zA-Z_]\\w*)?`, "s"),
-    detailed: new RegExp(`import\\s+(?<from>(?:(?<str_char>[${rules.string.openner.join('')}]).*\\k<str_char>)|\\w+)(?:\\s+with\\s+(?<deconstruct>[${rules.block.openner.join('')}].*[${rules.block.closer}]|\\*))?(?:\\s+in\\s+(?<variable>[a-zA-Z_]\\w*))?`, "s")
+    fast: new RegExp(`import\\s+(?:(?:(?<str_char>[${rules.string.openner.join('')}]).*\\k<str_char>)|\\w+)(?:\\s+only\\s+(?:[${rules.block.openner.join('')}].*[${rules.block.closer}]|\\*))?(?:\\s+in\\s+[a-zA-Z_]\\w*)?`, "s"),
+    detailed: new RegExp(`import\\s+(?<from>(?:(?<str_char>[${rules.string.openner.join('')}]).*\\k<str_char>)|\\w+)(?:\\s+only\\s+(?<deconstruct>[${rules.block.openner.join('')}].*[${rules.block.closer}]|\\*))?(?:\\s+in\\s+(?<variable>[a-zA-Z_]\\w*))?`, "s")
 }
 
 export default class Importater extends CompilerObject {
     constructor(data: ParserClassData) {
-        super(data, "import", `import my_module <with (data1, data2, ...)> <in variable>`, ImportaterRegExps)
+        super(data, "import", `import my_module <only (data1, data2, ...)> <in variable>`, ImportaterRegExps)
 
         this.bonus_score+= 1
     }
@@ -84,7 +84,7 @@ export default class Importater extends CompilerObject {
         if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(positioner, "Invalid syntax. Cannot import module")).raise()
         
         if(only) {
-            // Warn message
+            // Warn message (w = max-width)
             const w = 100
             const messages = StringTools.splitByWith("[Warning]> Deconstructed properties for import statements are not well implemented. Note that using them is not recommended and can cause errors.", w, true).map(t => `|${chalk.italic.red.bold(t)}|`)
             const borders = "-".repeat(w)

@@ -1,6 +1,6 @@
 {
   "name": "flylang",
-  "version": "0.0.2-alpha",
+  "version": "0.0.3-alpha",
   "description": "My first programing language compiler",
   "main": "dist/main.js",
   "scripts": {

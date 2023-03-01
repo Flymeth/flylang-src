@@ -1,3 +1,4 @@
+import eToNumber from "../lib/eToNumber.js";
 import { ParsedObject } from "../parser/parser.js";
 import chalk from "chalk";
 
@@ -29,15 +30,15 @@ export function removeUselessBackSlashInStr(str: string): string {
     return str2
 }
 
-export default function stringify(object: ParsedObject, colors= false): string {
+export default function stringify(object: ParsedObject, colors= false, insideObject= false): string {
     const {data, type} = object
     switch(type) {
         case "array": {
-            return (data.values.length ? "" : "array") + `{${data.values.map(d => stringify(d, colors)).join(', ')}}`
+            return (data.values.length ? "" : "array") + `{${data.values.map(d => stringify(d, colors, true)).join(', ')}}`
         }
         case "attribute_access": {
             const {origin, access} = data
-            const srcString = origin.fromScript ? `[${stringify(origin.object, colors)}]` : stringify(origin.object, colors)
+            const srcString = origin.fromScript ? `[${stringify(origin.object, colors, true)}]` : stringify(origin.object, colors)
             return `${srcString}-> ${access.map(obj => obj.fromScript ? `<${stringify(obj.object, colors)}>` : stringify(obj.object, colors)).join('.')}`
         }
         case "boolean_test": {
@@ -52,7 +53,7 @@ export default function stringify(object: ParsedObject, colors= false): string {
             return `${stringify(testers[0], colors)}${stringTests[test]}${stringify(testers[1], colors)}`
         }
         case "class_constructor": {
-            return `${data.name}<${data.extends.join('; ')}( ... )`
+            return `class {${data.name}} ${data.extends.length ? "< " + data.extends.join('; ') : ""}( ... )`
         }
         case "class_instanciation": {
             return `+${data.name}(${data.parameters.map(p => stringify(p, colors)).join(', ')})`
@@ -90,11 +91,11 @@ export default function stringify(object: ParsedObject, colors= false): string {
             return colors ? chalk.italic.magentaBright(txt) : txt
         }
         case "number": {
-            const txt  = data.number.toString()
+            const txt  = eToNumber(data.number.toString())
             return colors ? chalk.blueBright(txt) : txt
         }
         case "object": {
-            return (data.values.length ? "" : "object") + `{${data.values.map(({key, value}) => `${key} -> ${stringify(value, colors)}`).join(',\n')}}`
+            return (data.values.length ? "" : "object") + `{${data.values.map(({key, value}) => `${key} -> ${stringify(value, colors, true)}`).join(',\n')}}`
         }
         case "strict_value": {
             const value = data.value === null ? "unset" : `${data.value}`
@@ -125,7 +126,9 @@ export default function stringify(object: ParsedObject, colors= false): string {
         }
         case "string": {
             const baseString = data.map(v => v.type === "text" ? removeUselessBackSlashInStr(v.data) : `&(${stringify(v.data, colors)})`).join('')
-            return colors ? chalk.green(baseString) : baseString
+            const insideObjectString = insideObject ? `"${baseString}"` : baseString
+            const coloredString = colors ? chalk.green(insideObjectString) : insideObjectString
+            return coloredString
         }
     }
 

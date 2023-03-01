@@ -1,4 +1,4 @@
-import rules from "../../flylang.rules.json";
+import { langRules as rules } from "../registeries.js";
 import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import { multipleEndsWith, multipleStartsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";

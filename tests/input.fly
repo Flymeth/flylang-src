@@ -1,1 +1,1 @@
-|.gitkeep|
+std.out((2.5).asStr().asNbr())

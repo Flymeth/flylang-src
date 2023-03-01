@@ -1,4 +1,4 @@
-import rules from "../../flylang.rules.json";
+import { langRules as rules } from "../registeries.js";
 
 /**
  * Trim the given string with different rules (note that the .trim() function is not used so the only trimed chars is the one that are given)
