@@ -11,215 +11,52 @@ import { NumberReturn } from "../parser/objects/number.js"
 import { DictObjectReturn } from "../parser/objects/object.js"
 import { StrictValueReturn } from "../parser/objects/strict_value.js"
 import { StringReturn } from "../parser/objects/string.js"
-import Parser, { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
+import { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
 import Positioner from "../utils/positioner.js"
 import {Interface, createInterface} from "readline"
 import stringify from "./stringify.js"
 import AccessError from "../errors/interpreter/accessError.js"
-// import util from "util";
 import ExecutionError from "../errors/interpreter/executionError.js"
-import { AttrAccessReturn } from "../parser/objects/attr_access.js"
 import { VariableAsignationReturn } from "../parser/objects/variable_asignation.js"
 import { VariableReturn } from "../parser/objects/variable.js"
 import importError from "../errors/interpreter/importError.js"
-import eToNumber from "../lib/eToNumber.js"
+import genDefaultCache, { cacheInterface } from "./defaultCache.js"
+import InstanciationError from "../errors/interpreter/instanciationError.js"
+import {BigNumber} from "bignumber.js";
+import { inspect } from "util"
+import { join } from "path"
 
-export type methodObject<obj extends ParsableObjectList["data"]> = {
-    variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
-    functions: {[key: string]: (object: obj, ...args: ParsableObjectList[]) => Promise<ParsableObjectList>}
-}
-export type cacheInterface = {
-    registered: {
-        variables: {[key: string]: {editable: boolean, value: ParsableObjectList}},
-        functions: {[key: string]: FunctionAsignationReturn["data"]},
-        objects: {[key: string]: {data: cacheInterface["registered"], class?: ClassConstrReturn["data"]}}
-    },
-    builtin: {
-        variables: {[key: string]: () => Promise<ParsableObjectList>},
-        functions: {[key: string]: (...args: ParsableObjectList[]) => Promise<ParsableObjectList>},
-        objects: {[key: string]: {data: cacheInterface["builtin"]}}
-    },
-    methods: {
-        "string": methodObject<StringReturn["data"]>,
-        "number": methodObject<NumberReturn["data"]>,
-        "array": methodObject<ArrayReturn["data"]>,
-        "object": methodObject<DictObjectReturn["data"]>,
-        "class_constructor": methodObject<ClassConstrReturn["data"]>
-    },
-    functionsDepth: {
-        max: number,
-        list: {[key: string]: number}
-    },
-    workingAttrAccess?: AttrAccessReturn["data"]
-}
 export const UNDEFINED_TYPE: StrictValueReturn = {type: "strict_value", data: {value: null}}
+let inConsoleMode = false
 
+/**
+ * Returns if the program is in console mode
+ */
+export const ICM = () => inConsoleMode
 export default class Interpreter {
     data: ParserClassData
     cache: cacheInterface
     linereader: Interface
     currentPosition: Positioner
+
     constructor(data: ParserClassData, consoleMode = false) {
         this.data = data
         this.linereader = createInterface(process.stdin, process.stdout)
         this.linereader.pause()
         this.currentPosition = new Positioner("")
-
-        const interpMethods = this;
-        this.cache= {
-            registered: {
-                variables: {},
-                functions: {},
-                objects: {}
-            },
-            builtin: {
-                variables: {},
-                functions: {
-                    async clone(...args) {
-                        let obj = await interpMethods.eval(args[0])
-                        if(obj.type === "array") {
-                            obj.data.values = await Promise.all(obj.data.values.map(async (e) => await interpMethods.cache.builtin.functions.clone(e)))
-                        } else if(obj.type === "object") {
-                            obj.data.values = await Promise.all(
-                                obj.data.values.map(async (e) => ({...e, value: await interpMethods.eval(e.value)}))
-                            )
-                        }
-                        return JSON.parse(JSON.stringify(obj))
-                    },
-                    async range(fromObj, toObj, stepObj, ..._) {
-                        if(!fromObj) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range requires at least 1 argument.")).raise()
-                        fromObj = await interpMethods.eval(fromObj)
-                        if(toObj) toObj = await interpMethods.eval(toObj)
-                        if(stepObj) stepObj = await interpMethods.eval(stepObj)
-                        if(
-                            fromObj && fromObj.type !== "number"
-                            || toObj && toObj.type !== "number"
-                            || stepObj && stepObj.type !== "number"
-                        ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range arguments must be of type number.")).raise()
-
-                        let [from, to, step] = [fromObj.data.number, toObj?.data.number, stepObj?.data.number]
-                        if(typeof to !== "number") [from, to] = [0, from]
-                        if(typeof step !== "number") step = from < to ? 1 : -1
-                        if(
-                            step === 0
-                            || step < 0 && from < to
-                            || step > 0 && from > to
-                        ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Step can't be egual to 0. If the initial value is greater than the ending value, step must be lower than 0, and reversly.")).raise()
-
-                        const array: NumberReturn[] = []
-                        for(let i = from; (step < 0 ? i > to : i < to); i+= step) array.push({type: "number", data: {number: i, negative: i < 0, type: i.toString().includes('.') ? "float" : "integer"}})
-                        return {type: "array", data: {values: array}}
-                    },
-                    async typeof(obj, ..._) {
-                        obj = await interpMethods.eval(obj)
-                        return {type: "string", data: [{type: "text", data: obj.type}]}
-                    },
-                    async eval(str, ..._) {
-                        if(str.type !== "string") return UNDEFINED_TYPE
-                        const strContent = (await interpMethods.eval(str) as StringReturn).data[0].data as string
-                        const p = new Parser({type: "manualy", data: interpMethods.data})
-                        const parsed = await p.compile(strContent)
-                        if(!parsed) return UNDEFINED_TYPE
-                        return interpMethods.eval(parsed.content[0])
-                    }
-                },
-                objects: {
-                    std: {
-                        data: {
-                            variables: {},
-                            functions: {
-                                async in(...args) {
-                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, true)))).join('')
-                                    interpMethods.linereader.resume()
-                                    const ans = await new Promise<string>(res => interpMethods.linereader.question(dataStr, res))
-                                    interpMethods.linereader.pause()
-                                    return {type: "string", data: [{type: "text", data: ans}]}
-                                },
-                                async out(...args) {
-                                    const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, true)))).join(' ')
-                                    interpMethods.linereader.resume()
-                                    interpMethods.linereader.write(dataStr + "\n")
-                                    interpMethods.linereader.pause()
-                                    return UNDEFINED_TYPE
-                                },
-                                async cls(..._) {
-                                    console.clear()
-                                    return UNDEFINED_TYPE
-                                }
-                            },
-                            objects: {}
-                        }
-                    }
-                },
-            },
-            methods: {
-                array: {
-                    variables: {
-                        async len(obj) {
-                            const {length} = obj.values
-                            return {type: "number", data: {number: length, negative: length < 0, type: length.toString().includes('.') ? 'float' : 'integer'}}
-                        }
-                    },
-                    functions: {
-                        async add(object, ...args) {
-                            object.values.push(...(
-                                await Promise.all(args.map(e => interpMethods.eval(e)))
-                            ))
-                            return UNDEFINED_TYPE
-                        },
-                        async pop(object, ...args) {
-                            const index = args[0] || {type: "number", data: {number: 0}}
-                            if(index.type !== "number") return UNDEFINED_TYPE
-                            const numberedIndex = index.data.number < 0 ? object.values.length + index.data.number : index.data.number
-                            const deleted = object.values[numberedIndex]
-                            object.values = object.values.filter((_, i) => i !== numberedIndex)
-
-                            return deleted
-                        }
-                    }
-                },
-                class_constructor: {
-                    variables: {},
-                    functions: {}
-                },
-                number: {
-                    variables: {},
-                    functions: {
-                        async asStr(nb, ..._) {
-                            return {type: "string", data: [{type: "text", data: eToNumber(nb.number.toString())}]}
-                        }
-                    }
-                },
-                object: {
-                    variables: {},
-                    functions: {}
-                },
-                string: {
-                    variables: {
-                        async len(args) {
-                            const {length} = (await Promise.all(args.map(async v => v.type === "data" ? stringify(await interpMethods.eval(v.data) || v.data) : v.data))).join('')
-                            return {type: "number", data: {number: length, negative: length < 0, type: length.toString().includes('.') ? "float" : "integer"}}
-                        }
-                    },
-                    functions: {
-                        async asNbr(args, ..._) {
-                            const content = (await Promise.all(args.map(async v => v.type === "data" ? stringify(await interpMethods.eval(v.data) || v.data) : v.data))).join('').trim()
-                            const isFloat = content.includes('.')
-                            const parsed = isFloat ? parseFloat(content) : parseInt(content)
-                            if(isNaN(parsed)) return UNDEFINED_TYPE
-                            
-                            return {type: "number", data: {number: parsed, negative: parsed < 0, type: isFloat ? "float" : "integer"}}
-                        }
-                    }
-                }
-            },
-            functionsDepth: {
-                max: parseInt(this.data.properties.getValue('maxRecurtionDepth')?.value || (125).toString()),
-                list: {}
-            }
-        }
+        this.cache= genDefaultCache(this)
 
         if(consoleMode) this.start_InConsoleMode()
+    }
+
+    async input(prompt: string) {
+        this.linereader.resume()
+        const v = await new Promise<string>(res => this.linereader.question(prompt, res))
+        this.linereader.pause()
+        return v
+    }
+    async print(data: string) {
+        process.stdout.write(data + "\n")
     }
     
     private async evalFunction(fct: FunctionAsignationReturn["data"], parameters: ParsableObjectList[]): Promise<ParsableObjectList | void> {        
@@ -231,7 +68,7 @@ export default class Interpreter {
             objects: {},
             variables: {}
         }
-
+        
         if(args && args.length) {
             let index = 0
             while(index < args.length) {
@@ -246,7 +83,12 @@ export default class Interpreter {
         return res
     }
     private async instanciateClass(cls: ClassConstrReturn["data"], parameters: ParsableObjectList[], instanceName: string): Promise<cacheInterface["registered"]> {
-        const classCache: cacheInterface["registered"]["objects"][string]["data"] = {variables: {}, functions: {}, objects: {}}
+        const classCache: cacheInterface["registered"]["objects"][string]["data"] = this.cache.registered.objects[instanceName]?.data || {variables: {}, functions: {}, objects: {}}
+        /**
+         * If true: this instanciate a extend from another class
+         * If false: this is a real class instancier
+         */
+        const isAnExtender = !!this.cache.registered.objects[instanceName]        
         this.cache.registered.objects[instanceName] = {data: classCache, class: cls}
 
         if(cls.content) {
@@ -254,7 +96,7 @@ export default class Interpreter {
 
             const fcts = properties.filter((p): p is FunctionAsignationReturn => p.type === "function_asignation")
             const vars = properties.filter((p): p is VariableAsignationReturn => p.type === "variable_asignation")
-
+            
             for(const {data} of fcts) {
                 if(!data.name) continue
                 classCache.functions[data.name] = data
@@ -264,9 +106,30 @@ export default class Interpreter {
                 classCache.variables[data.variable.data.name] = {editable: !data.constant, value: data.value || UNDEFINED_TYPE}
             }
 
-            this.cache.registered.variables["me"] = {editable: false, value: {type: "variable", data: {name: instanceName}}}            
+            const extended: string[] = []
+            for await(const name of cls.extends) {
+                const extender = await this.eval({type: "variable", data: {name}})
+                if(extender.type !== "class_constructor") throw new RaiseFlyLangCompilerError(new InstanciationError(this.currentPosition, "Invalid extender has been given.")).raise()
+                
+                if(!this.cache.builtin.functions[extender.data.name]) {
+                    this.cache.builtin.functions[extender.data.name] = async (...args) => {
+                        if(extended.includes(extender.data.name)) throw new RaiseFlyLangCompilerError(new InstanciationError(this.currentPosition, "Class already extended with this object.")).raise()
+                        await this.instanciateClass(extender.data, args, instanceName)
+                        
+                        extended.push(extender.data.name)
+                        return {type: "variable", data: {name: "me"}}
+                    }
+                }
+            }
+
+            this.cache.registered.variables["me"] = {editable: false, value: {type: "variable", data: {name: instanceName}}}
             await this.evalFunction(constructor.data,  parameters)
-            delete this.cache.registered.variables["me"]
+            if(extended.length < cls.extends.length) throw new RaiseFlyLangCompilerError(new InstanciationError(this.currentPosition, "Class extenders has been missed.")).raise()
+
+            if(!isAnExtender) {
+                delete this.cache.registered.variables["me"]
+                for(const name of extended) delete this.cache.builtin.functions[name]
+            }
         }
         return classCache
     }
@@ -277,7 +140,7 @@ export default class Interpreter {
                 return !!element.data.values.length
             }
             case "number": {
-                return element.data.number !== 0
+                return !element.data.number.isEqualTo(0)
             }
             case "string": {
                 return !!(element.data[0]?.data !== "")
@@ -293,7 +156,7 @@ export default class Interpreter {
     }
 
     /**
-     * Execute an instructino
+     * Execute an instruction
      * @param instruction The instruction to execute
      */
     async eval(instruction: ParsedObject): Promise<ParsableObjectList> {
@@ -317,7 +180,7 @@ export default class Interpreter {
                 }
 
                 if(data.name in variables) {
-                    const v = variables[data.name]                    
+                    const v = variables[data.name]
                     if(typeof v !== "function") {
                         if(v.value.type === "variable" && !v.value.data.name.startsWith('//')) return await this.eval(v.value)
                         else return v.value
@@ -354,7 +217,7 @@ export default class Interpreter {
             }
             case "class_instanciation": {
                 const variable = await this.eval({type: "variable", data: {name: data.name}})
-                if(variable?.type !== "class_constructor") throw new RaiseFlyLangCompilerError(new VariableError(this.currentPosition, `"${data.name}" has not been declared as a class.`)).raise()
+                if(variable.type !== "class_constructor") throw new RaiseFlyLangCompilerError(new VariableError(this.currentPosition, `"${data.name}" has not been declared as a class.`)).raise()
                 const instances = Object.keys(this.cache.registered.objects).length
                 const className = `//instance_${data.name}_${instances}`
 
@@ -365,12 +228,12 @@ export default class Interpreter {
                 const {constant, value, variable} = data
 
                 if(variable.type === "variable") {
-                    if(this.cache.registered.variables[variable.data.name]?.editable === false) throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition)).raise()
+                    if(this.cache.registered.variables[variable.data.name]?.editable === false) throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition, "Variable has been set as a constant.")).raise()
                     
                     this.cache.registered.variables[variable.data.name] = {
                         value: await this.eval(value || UNDEFINED_TYPE),
                         editable: !constant
-                    }                    
+                    }
                 }else if(variable.type === "array" && value) {
                     const asignationValues = variable.data.values
                     const valueContent = await this.eval(value)
@@ -378,7 +241,7 @@ export default class Interpreter {
                         const values = valueContent.data.values.slice(0, asignationValues.length)
                         for(const index in asignationValues) {
                             const variable = asignationValues[index]
-                            if(variable.type !== "variable") throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition)).raise()
+                            if(variable.type !== "variable") throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition, "Invalid deconstructed properties")).raise()
 
                             await this.eval({type: "variable_asignation", data: {variable, value: values[index], constant}})
                         }
@@ -393,8 +256,8 @@ export default class Interpreter {
                         key?.type === "string" ? stringify(await this.eval(key)) :
                         key?.type === "number" ? key.data.number.toString() : null
                     )
-                    if(objectWhereDefine.type === "variable" && objectWhereDefine.data.name.startsWith('//')) {
-                        // = Class object
+                    if(objectWhereDefine.type === "variable" && objectWhereDefine.data.name.startsWith('//instance')) {
+                        //instance = Class object
 
                         if(!strKey) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, "Invalid key provided.")).raise()
                         const cls = this.cache.registered.objects[objectWhereDefine.data.name]
@@ -406,17 +269,24 @@ export default class Interpreter {
                         }
 
                     } else if(objectWhereDefine.type === "array" && key?.type === "number") {
-                        const index = key.data.number < 0 ? objectWhereDefine.data.values.length - key.data.number : key.data.number
+                        let index = key.data.number.toNumber()
+                        if(index < 0) index = objectWhereDefine.data.values.length - index
+
                         objectWhereDefine.data.values[index] = await this.eval(value || UNDEFINED_TYPE)
                     } else if(objectWhereDefine.type === "object") {                        
                         if(!strKey) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, "Invalid key provided.")).raise()
 
-                        let index = objectWhereDefine.data.values.findIndex(e => e.key === strKey)
-                        if(index < 0) (index = objectWhereDefine.data.values.length), objectWhereDefine.data.values.push({key: strKey, value: UNDEFINED_TYPE})
+                        let index = objectWhereDefine.data.values.findIndex(e => e.key === strKey)                        
+                        if(index < 0) {
+                            index = objectWhereDefine.data.values.length
+                            objectWhereDefine.data.values.push({key: strKey, value: UNDEFINED_TYPE})
+                        }
+
                         objectWhereDefine.data.values[index].value = await this.eval(value || UNDEFINED_TYPE)
                     }else throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `"${stringify(key || UNDEFINED_TYPE)}" doesn't exist on the object.`)).raise()
+                    
                 }
-                return UNDEFINED_TYPE
+                return variable
             }
             case "function_asignation": {
                 if(data.name) {
@@ -424,18 +294,17 @@ export default class Interpreter {
                     delete this.cache.registered.objects[data.name]
                     this.cache.registered.functions[data.name] = data
                 }
-                return {type, data}
+                break;
             }
             case "string": {
                 let sentence = ""
                 for await(const current of data) {
                     if(current.type === "text") sentence += current.data
                     else {
-                        const evaluated = (await this.eval(current.data)) || UNDEFINED_TYPE
+                        const evaluated = await this.eval(current.data)
                         sentence += (evaluated.type === "string" ? evaluated.data[0].data : stringify(evaluated))
                     }
                 }
-
                 return {type: "string", data: [{type: "text", data: sentence}]}
             }
             case "boolean_test": {
@@ -463,23 +332,23 @@ export default class Interpreter {
                 }
             }
             case "comparaison": {
-                const getComparableValue = async (obj: ParsableObjectList): Promise<[string, number] | null> => {                    
+                const getComparableValue = async (obj: ParsableObjectList): Promise<[string, BigNumber] | null> => {                    
                     switch (obj.type) {
                         case "array": {
-                            return [JSON.stringify(obj.data.values), obj.data.values.length]
+                            return [JSON.stringify(obj.data.values), new BigNumber(obj.data.values.length)]
                         }
                         case "object": {
-                            return [JSON.stringify(obj.data.values.map(e => e.key)), obj.data.values.length]
+                            return [JSON.stringify(obj.data.values.map(e => e.key)), new BigNumber(obj.data.values.length)]
                         }
                         case "string": {
                             const content = (await this.eval(obj) as StringReturn).data[0].data as string // This function parse automatically the string and its content
-                            return [content, content.length]
+                            return [content, new BigNumber(content.length)]
                         }
                         case "number": {
                             return [obj.data.number.toString(), obj.data.number]
                         }
                         case "strict_value": {
-                            return [!!obj.data.value ? "true" : "false", !!obj.data.value ? 1 : 0]
+                            return [!!obj.data.value ? "true" : "false", new BigNumber(!!obj.data.value ? 1 : 0)]
                         }
                     }
                     return null
@@ -502,19 +371,19 @@ export default class Interpreter {
                         break;
                     }
                     case "inf": {
-                        res= {type: "strict_value", data: {value: operators.first[1] <= operators.second[1]}}
+                        res= {type: "strict_value", data: {value: operators.first[1].isLessThanOrEqualTo(operators.second[1])}}
                         break;
                     }
                     case "inf_strict": {
-                        res= {type: "strict_value", data: {value: operators.first[1] < operators.second[1]}}
+                        res= {type: "strict_value", data: {value: operators.first[1].isLessThan(operators.second[1])}}
                         break;
                     }
                     case "sup": {
-                        res= {type: "strict_value", data: {value: operators.first[1] >= operators.second[1]}}
+                        res= {type: "strict_value", data: {value: operators.first[1].isGreaterThanOrEqualTo(operators.second[1])}}
                         break;
                     }
                     case "sup_strict": {
-                        res= {type: "strict_value", data: {value: operators.first[1] > operators.second[1]}}
+                        res= {type: "strict_value", data: {value: operators.first[1].isGreaterThan(operators.second[1])}}
                         break;
                     }
                 }
@@ -536,7 +405,7 @@ export default class Interpreter {
                         switch(operations.first.type) {
                             case "array": {
                                 const values1 = operations.first.data.values
-                                const values2 = (operations.second as ArrayReturn).data.values
+                                const values2 = await Promise.all((operations.second as ArrayReturn).data.values.map(e => this.eval(e)))
                                 return {type: "array", data: {values: [...values1, ...values2]}}
                             }
                             case "object": {
@@ -548,9 +417,9 @@ export default class Interpreter {
                             case "number": {
                                 const nb1 = operations.first.data.number
                                 const nb2 = (operations.second as NumberReturn).data.number
-                                const res = nb1 + nb2
+                                const res = nb1.plus(nb2)
                                 
-                                return {type: "number", data: {number: res, negative: res < 0, type: res.toString().includes('.') ? "float" : "integer"}}
+                                return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
                             }
                             case "string": {
                                 const str1 = (await this.eval(operations.first) as StringReturn).data[0].data as string
@@ -572,9 +441,9 @@ export default class Interpreter {
                     
                     if(operations.first.type === operations.second.type) {
                         const numbers: NumberReturn[] = [operations.first as NumberReturn, operations.second as NumberReturn]
-                        const result = numbers[0].data.number * numbers[1].data.number
+                        const result = numbers[0].data.number.multipliedBy(numbers[1].data.number)
                         return {
-                            type: "number", data: {number: result, negative: result < 0, type: result.toString().includes('.') ? "float" : "integer"}
+                            type: "number", data: {number: result, negative: result.isNegative(), type: result.isInteger() ? "integer" : "float"}
                         }
                     }else {
                         //@ts-ignore Checked above
@@ -582,17 +451,18 @@ export default class Interpreter {
                         const obj = operations.first.type === "number" ? operations.second : operations.first
                         switch(obj.type) {
                             case "string": {
-                                if(number <= 0) return {type: "string", data: []}
+                                if(number.isNegative()) return {type: "string", data: []}
                                 else {
                                     const str = (await this.eval(obj) as StringReturn).data[0].data as string
-                                    return {type: "string", data: [{type: "text", data: str.repeat(number)}]}
+                                    return {type: "string", data: [{type: "text", data: str.repeat(number.toNumber())}]}
                                 }
                             }
                             case "array": {
-                                if(number <= 0) return {type: "array", data: {values: []}}
+                                if(number.isNegative()) return {type: "array", data: {values: []}}
                                 else {
                                     const {values} = obj.data
-                                    for(let i = 1; i < number; i++) {
+                                    const max = number.toNumber()
+                                    for(let i = 1; i < max; i++) {
                                         obj.data.values.push(...[...values])
                                     }
                                     return obj
@@ -607,20 +477,20 @@ export default class Interpreter {
                         || operations.second.type !== "number"
                     ) throw new RaiseFlyLangCompilerError(new OperationError(this.currentPosition, `This operation operate only if operands are numbers.`)).raise()
                     const numbers = [operations.first.data.number, operations.second.data.number]
-                    if(numbers[1] === 0 && (
+                    if(numbers[1].isEqualTo(0) && (
                         ["eucl_division", "division"].includes(data.operation)
                     )) throw new RaiseFlyLangCompilerError(new OperationError(this.currentPosition, "Division by 0 is not a valid math operation.")).raise()
                     
                     const result = (
-                        data.operation === "eucl_division" ? Math.floor(numbers[0] / numbers[1]) :
-                        data.operation === "eucl_rest" ? numbers[0] % numbers[1] :
-                        data.operation === "power" ? numbers[0] ** numbers[1] :
-                        data.operation === "division" ? numbers[0] / numbers[1] :
-                        data.operation === "substraction" ? numbers[0] - numbers[1] : null
+                        data.operation === "eucl_division" ? numbers[0].dividedToIntegerBy(numbers[1]) :
+                        data.operation === "eucl_rest" ? numbers[0].modulo(numbers[1]) :
+                        data.operation === "power" ? numbers[0].pow(numbers[1]) :
+                        data.operation === "division" ? numbers[0].dividedBy(numbers[1]) :
+                        data.operation === "substraction" ? numbers[0].minus(numbers[1]) : null
                     ) // Multiplication & addition are processed above
 
                     if(result === null) throw new RaiseFlyLangCompilerError(new CompilerError()).raise()
-                    return {type: "number", data: {negative: result < 0, number: result, type: result.toString().includes('.') ? "float" : "integer"}}
+                    return {type: "number", data: {negative: result.isNegative(), number: result, type: result.isInteger() ? "integer" : "float"}}
                 }
             }
             case "attribute_access": {
@@ -629,7 +499,7 @@ export default class Interpreter {
                 if(!firstAccessor) return origin.object
 
                 const deleteAttrCache = !this.cache.workingAttrAccess
-                if(deleteAttrCache) this.cache.workingAttrAccess = data                
+                if(deleteAttrCache) this.cache.workingAttrAccess = data
 
                 const originValue = await this.eval(origin.object)
                 const litteralValue = origin.fromScript ? originValue : origin.object
@@ -644,14 +514,14 @@ export default class Interpreter {
                 if(originValue.type === "array" && accessValue.type === "number") { // Access to an array' item
                     const {values} = originValue.data
                     let {number} = accessValue.data
-                    if(number < 0) number = values.length + number
-                    if(number > values.length) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `Index [${accessValue.data.number}] out of range`)).raise()
-                    returnsValue = values[number]
+                    if(number.isNegative()) number = number.plus(values.length)
+                    if(number.isGreaterThan(values.length)) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `Index [${accessValue.data.number}] out of range`)).raise()
+                    returnsValue = values[number.toNumber()]
                 }else if(originValue.type === "object") { // Access to an object's key
                     const keyName = (
                         accessValue.type === "variable" ? accessValue.data.name : 
                         accessValue.type === "function_call" ? accessValue.data.name :
-                        stringify(accessValue)
+                        stringify(accessValue, false, false)
                     )
                     
                     const value = originValue.data.values.find(k => k.key === keyName)?.value || UNDEFINED_TYPE
@@ -662,18 +532,19 @@ export default class Interpreter {
                         returnsValue = await this.evalFunction(returnsValue.data, accessValue.data.arguments) || UNDEFINED_TYPE
                     }
                 } else if((litteralValue.type === "variable" && (litteralValue.data.name in classes)) || (originValue.type === "variable" && (originValue.data.name in classes))) { // Access to a class method/property
+                    const thenSetMeAs: cacheInterface["registered"]["variables"][string] | undefined = this.cache.registered.variables.me
                     const isRegisteredClass = originValue.type === "variable" && originValue.data.name.startsWith('//instance')
                     const classMethods = classes[(isRegisteredClass ? originValue.data.name : (litteralValue as VariableReturn).data.name)]
-                    //?                                                                       \\ This has been tested above  //
+                    //?                                                                       \\ This has been tested above //
                     
-                    if(isRegisteredClass) this.cache.registered.variables["me"] = {editable: false, value: originValue}
+                    if(isRegisteredClass) this.cache.registered.variables.me = {editable: false, value: originValue}
                     if(accessValue.type === "variable") {
                         const {variables, functions} = classMethods.data
-
+                        
                         if(accessValue.data.name in variables) {
                             const v = variables[accessValue.data.name]
                             if(typeof v === "function") returnsValue = await v()
-                            else returnsValue = v.value
+                            else returnsValue = await this.eval(v.value)
                         }else if(accessValue.data.name in functions) {
                             const v = functions[accessValue.data.name]
                             if(typeof v === "function") {
@@ -682,7 +553,7 @@ export default class Interpreter {
                             }else returnsValue = {type: "function_asignation", data: v}
                         }
                     }else if(accessValue.type === "function_call") {
-                        const {functions} = classMethods.data                        
+                        const {functions} = classMethods.data
                         if(accessValue.data.name in functions) {
                             const v = functions[accessValue.data.name]
                             if(typeof v === "function") returnsValue = await v(...accessValue.data.arguments) || UNDEFINED_TYPE
@@ -691,7 +562,10 @@ export default class Interpreter {
                     }
                     
                     // Please note that I don't fucking know why it works with the inverse mode and not in normal mode...
-                    if(!isRegisteredClass) delete this.cache.registered.variables["me"]
+                    if(isRegisteredClass) {
+                        if(thenSetMeAs) this.cache.registered.variables.me = thenSetMeAs
+                        else delete this.cache.registered.variables.me
+                    }
                 }
                 if(!returnsValue) {
                     if(originValue.type in this.cache.methods) {
@@ -711,6 +585,7 @@ export default class Interpreter {
                         }
                     }
                 }
+
                 if(!returnsValue) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `Invalid attribute/method for a ${originValue.type}.`)).raise()
                 if(access.length - 1) returnsValue = await this.eval({type: "attribute_access", data: {origin: {fromScript: false, object: returnsValue}, access: access.slice(1)}})
                 if(returnsValue.type === "variable") returnsValue = await this.eval(returnsValue)
@@ -738,9 +613,9 @@ export default class Interpreter {
                     const isBuiltinFct = fct.data.name?.startsWith('//builtin')
                     if(skipNoCodeLoops && !(fct.data.code.length || isBuiltinFct)) return UNDEFINED_TYPE
 
-                    let index = 0
-                    while(index < iteratorArray.length) {
-                        let value= iteratorArray[index]
+                    let index = new BigNumber(0)
+                    while(index.isLessThan(iteratorArray.length)) {
+                        let value= iteratorArray[index.toNumber()]
 
                         if(typeof value === "string") value= {type: "string", data: [{type: "text", data: value}]}
                         const fctArgs: ParsableObjectList[] = [
@@ -753,7 +628,7 @@ export default class Interpreter {
                             const res = await this.evalFunction(fct.data, fctArgs)
                             if(res?.type === "stopper") return res
                         }
-                        index++
+                        index= index.plus(1)
                     }
 
                     return UNDEFINED_TYPE
@@ -790,24 +665,15 @@ export default class Interpreter {
                 this.cache.registered.variables[data.name] = {editable: true, value: {type, data}}
                 break;
             }
-            case "object": {
-                for await(const e of data.values) await this.eval(e.value)
-                break;
-            }
-            case "array": {
-                for await(const e of data.values) await this.eval(e)
-                break;
-            }
             case "import": {
                 const {importType, informations} = data
                 const importName = importType === "file" ? (data.imported.origin.file || "<unknow>") : data.name
                 if(importType === "file") {
                     const {affectedTo} = informations
-                    const obj: cacheInterface["registered"]["objects"][string] = {
+                    const obj: cacheInterface["registered"]["objects"][string] = this.cache.registered.objects[affectedTo?.data.name || ""] || {
                         data: {functions: {}, objects: {}, variables: {}},
                         class: {name: `//import_${importType}_${importName}`, extends: [], content: null}
                     }
-
                     for(const imported of data.imported.content) {
                         let done = false
                         if(imported.type === "function_asignation") {
@@ -822,7 +688,6 @@ export default class Interpreter {
                         }
                         if(!done) throw new RaiseFlyLangCompilerError(new importError(this.currentPosition, `"${imported.type}" is not a valid import type.`))
                     }
-
                     if(affectedTo) this.cache.registered.objects[affectedTo.data.name]= obj
                     else {
                         for(const name in obj.data.variables) this.cache.registered.variables[name]= obj.data.variables[name]
@@ -830,9 +695,46 @@ export default class Interpreter {
                         for(const name in obj.data.objects) this.cache.registered.objects[name]= obj.data.objects[name]
                     }
                 }else {
-                    // Custom module import
-                    // todo
+                    const modFilePath = join(__dirname, './modules/', `${data.name}.js`)
+                    try {
+                        var moduleFct: ((intr: Interpreter) => cacheInterface["builtin"]) | undefined = require(modFilePath)?.default
+                        if(!moduleFct) throw 1
+                    } catch (_) {
+                        throw new RaiseFlyLangCompilerError(new importError(this.currentPosition, `Module ${data.name} has not been found.`)).raise()
+                    }
+                    const module = moduleFct(this)                    
+                    const {affectedTo, restrictions} = informations
+                    
+                    if(restrictions) {
+                        for(const name in module.variables) {
+                            if(!restrictions.includes(name)) delete module.variables[name]
+                        }
+                        for(const name in module.functions) {
+                            if(!restrictions.includes(name)) delete module.functions[name]
+                        }
+                        for(const name in module.objects) {
+                            if(!restrictions.includes(name)) delete module.objects[name]
+                        }
+                    }
+
+                    if(affectedTo) {
+                        const obj: cacheInterface["builtin"]["objects"][string] = this.cache.builtin.objects[affectedTo?.data.name || ""] || {
+                            data: {functions: {}, objects: {}, variables: {}},
+                            class: {name: `//import_${importType}_${importName}`, extends: [], content: null}
+                        }
+                        for(const name in module.variables) obj.data.variables[name]= module.variables[name]
+                        for(const name in module.functions) obj.data.functions[name]= module.functions[name]
+                        for(const name in module.objects) obj.data.objects[name]= module.objects[name]
+
+                        this.cache.builtin.objects[affectedTo.data.name]= obj
+                    } else {
+                        for(const name in module.variables) this.cache.builtin.variables[name]= module.variables[name]
+                        for(const name in module.functions) this.cache.builtin.functions[name]= module.functions[name]
+                        for(const name in module.objects) this.cache.builtin.objects[name]= module.objects[name]
+                    }
                 }
+
+                break;
             }
             case "comment": {
                 return UNDEFINED_TYPE
@@ -881,7 +783,7 @@ export default class Interpreter {
             }
         }
 
-        if(result?.type === "stopper") result= {type: "stopper", data: {...result.data, return: await this.eval(result.data.return || UNDEFINED_TYPE)}}
+        if(result?.type === "stopper") result.data.return = await this.eval(result.data.return || UNDEFINED_TYPE)
         if(incrementScope) { // Deletes only if scope has been incremented
             // Delete local variables/functions/classes from cache
             for(const name in this.cache.registered.variables) {
@@ -900,12 +802,41 @@ export default class Interpreter {
 
     //? In-console mode methods //
     async start_InConsoleMode(): Promise<void> {
-        const input = await new Promise<string>(res => this.linereader.question("[FLYLANG]> ", res))
-        if(input === "//exit") return this.linereader.close()
+        inConsoleMode= true
+        const input = await this.input("[FLYLANG]> ")
+        if(input.startsWith('//')) return this.exec_InConsoleCmd(input.slice(2))
 
-        const evaluated = await this.cache.builtin.functions['eval']({type: "string", data: [{type: "text", data: input}]})
-        this.linereader.write(stringify(evaluated, true) + "\n")
+        try {
+            const evaluated = await this.cache.builtin.functions['eval']({type: "string", data: [{type: "text", data: input}]}).catch()
+            if(evaluated.type !== "strict_value" || evaluated.data.value !== null) {
+                this.print(stringify(evaluated, true))
+            }
+        } catch (_) { }
 
+        return this.start_InConsoleMode()
+    }
+    async exec_InConsoleCmd(cmd: string): Promise<void> {
+        const helpCmd = "help -> Display this message\n"
+                        + "clear -> Clear the console\n"
+                        + "exit -> Exit the console mode"
+
+        switch(cmd) {
+            case "help": {
+                this.print(helpCmd)
+                break;
+            }
+            case "clear": {
+                await this.cache.builtin.objects["std"].data.functions["cls"]()
+                break;
+            }
+            case "exit": {
+                return
+            }
+            default: {
+                this.print("This command doesn't exist.")
+                break;
+            }
+        }
         return this.start_InConsoleMode()
     }
 }

@@ -21,7 +21,7 @@ export const CommentaryRegexps = {
 export default class Commentary extends CompilerObject {
     constructor(data: ParserClassData) {
         super(data, "comment", `#(Hey this texte is a commentary!)`, CommentaryRegexps)
-        this.bonus_score+= 1
+        this.bonus_score+= 10
     }
 
     async parse(code: Positioner): Promise<CommentaryReturn | null> {

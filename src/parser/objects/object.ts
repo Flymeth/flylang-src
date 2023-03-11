@@ -24,7 +24,7 @@ export default class DictObject extends CompilerObject {
             detailed: new RegExp(`${opener.source}\\s*(?<items>(?:\\s*\\w*\\s*:.*)+)\\s*${closer.source}`, "si")
         })
         
-        this.bonus_score+= 1;
+        this.bonus_score+= 2;
     }
 
     async parse(code: Positioner): Promise<DictObjectReturn | null> {

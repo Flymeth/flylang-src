@@ -54,6 +54,7 @@
     "keywords": [
         "if", "else", "for", "while",
         "until", "cs", "fn", "new",
-        "import", "with", "in"
+        "import", "only", "in", "return",
+        "pass", "break"
     ]
 }

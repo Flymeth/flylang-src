@@ -1,1 +1,4 @@
-std.out((2.5).asStr().asNbr())
+import maths only (factorial)
+factorialOf: std.in().asNbr()
+std.cls()
+std.out("&(factorialOf)! = &(factorial(factorialOf))")

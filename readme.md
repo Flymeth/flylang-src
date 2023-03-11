@@ -45,6 +45,15 @@ for(range(1, factorialOf +1), fn(v,
 std.out("!&(factorialOf) = &(out)")
 ```
 
+##### Or you can import the builtin function
+
+```fly
+import maths only (factorial)
+factorialOf: std.in("!").asNbr()
+std.cls()
+std.out("!&(factorialOf) = &(factorial(factorialOf))")
+```
+
 ## Properties
 
 You my have notice that in the same folder that the `flylang.exe` file there is an `assets` folder. Inside this folder a `flylang.properties` file is present: this is where all the flylang's interpreter behaviors can be modified. Here is the list of the modifiable behaviors:
@@ -53,6 +62,7 @@ property | description | default
 ---|---|---
 maxRecurtionDepth | The maximum times that a function can calls them-self | 120
 maxLoopIteration | The maximum loop iterations number | 300
+maxObjectsSize | The maximum length an object/list can have | 255
 autoSkipUseless | If yes (`1`) or no (`0`) flylang will skip what it thinks as useless code | 0 (`no`)
 inConsoleModeWhenFileExecuted | When a file is executed, if at the end of execution interpreter starts a new InConsole session | 0 (`no`)
 

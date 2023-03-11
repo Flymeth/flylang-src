@@ -144,7 +144,7 @@ export default class Parser {
         }
     }
 
-    static async parse(data: ParserClassData, position: Positioner, parsingObjects?: CompilerObject[]): Promise<ParsableObjectList | null> {
+    static async parse(data: ParserClassData, position: Positioner, parsingObjects?: CompilerObject[]): Promise<ParsableObjectList & ParsableObjectInformations | null> {
         const {now} = position
         const tester = removeComments(codeSimplifier(now) || "")
         if(!tester) return null
@@ -157,7 +157,12 @@ export default class Parser {
         
         const focusedCode = removeComments(removeUselessPriorities(now) || "")
         if(!focusedCode) return null
-        return await obj.parse(new Positioner(focusedCode, position, position.file))
+        const result = await obj.parse(new Positioner(focusedCode, position, position.file))
+        if(!result) return null
+        return {
+            ...result,
+            map: position.relatives?.global.position || position.indexes
+        }
     }
 
     async compile(customCode?: string | Positioner, inherits?: ParserReturn): Promise<ParserReturn | null> {
@@ -176,10 +181,7 @@ export default class Parser {
                 const result = await Parser.parse(this.data, content.split())
                 
                 if(!result) return new RaiseFlyLangCompilerError(fastSyntaxError(content.asOriginal)).raise()
-                compiled.push({
-                    ...result,
-                    map: content.relatives?.global.position || content.indexes
-                })
+                compiled.push(result)
             }
         }
         

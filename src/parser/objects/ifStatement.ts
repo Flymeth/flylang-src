@@ -27,7 +27,7 @@ export default class ifStatement extends CompilerObject {
             detailed: /if\s*\(\s*(?<condition>.+?)\s*,\s*(?<requires_parsing>.*)/s
         })
 
-        this.bonus_score+= 1
+        this.bonus_score+= 3
     }
 
     /**
@@ -56,7 +56,8 @@ export default class ifStatement extends CompilerObject {
             block_borns.closer,
             undefined,
             1
-        )        
+        )
+        
         if(!splitted) return new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
         const executable = splitted.shift()
         if(!executable) return new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
@@ -108,8 +109,7 @@ export default class ifStatement extends CompilerObject {
             || ifRegRes.index
             || !ifRegRes.groups?.condition
             || !ifRegRes.groups?.requires_parsing
-        ) return null;
-        // let {condition, requires_parsing} = ifRegRes.groups
+        ) return null;        
         
         const condition = pos.split()
         condition.start = pos.now.indexOf(ifRegRes.groups.condition)

@@ -164,5 +164,5 @@ until(<condition>,
 This feature import flylang's code from another file or import a module's features.
 
 ```doc
-import <module / file path> [with (import1, import2, ...)] [in <variable name>]
+import <module / file path> [only (import1, import2, ...)] [in <variable name>]
 ```

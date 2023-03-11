@@ -39,7 +39,7 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
         case "attribute_access": {
             const {origin, access} = data
             const srcString = origin.fromScript ? `[${stringify(origin.object, colors, true)}]` : stringify(origin.object, colors)
-            return `${srcString}-> ${access.map(obj => obj.fromScript ? `<${stringify(obj.object, colors)}>` : stringify(obj.object, colors)).join('.')}`
+            return `${srcString} -> ${access.map(obj => obj.fromScript ? `<${stringify(obj.object, colors)}>` : stringify(obj.object, colors)).join('.')}`
         }
         case "boolean_test": {
             const {test, testers} = data
@@ -50,7 +50,7 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
                 nor: "!|",
                 xor: "~"
             }
-            return `${stringify(testers[0], colors)}${stringTests[test]}${stringify(testers[1], colors)}`
+            return `${stringify(testers[0], colors)} ${stringTests[test]} ${stringify(testers[1], colors)}`
         }
         case "class_constructor": {
             return `class {${data.name}} ${data.extends.length ? "< " + data.extends.join('; ') : ""}( ... )`
@@ -95,14 +95,14 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
             return colors ? chalk.blueBright(txt) : txt
         }
         case "object": {
-            return (data.values.length ? "" : "object") + `{${data.values.map(({key, value}) => `${key} -> ${stringify(value, colors, true)}`).join(',\n')}}`
+            return (data.values.length ? "" : "object") + `{${data.values.map(({key, value}) => `(${key} -> ${stringify(value, colors, true)})`).join(' , ')}}`
         }
         case "strict_value": {
             const value = data.value === null ? "unset" : `${data.value}`
             return colors ? chalk.yellow(value) : value
         }
         case "variable": {
-            return `< ${data.name} >`
+            return `<variable: ${data.name}>`
         }
         case "variable_asignation": {
             return `${stringify(data.variable, colors)} <${data.constant ? "=" : "-"} ${data.value ? stringify(data.value, colors) : "unset"}`

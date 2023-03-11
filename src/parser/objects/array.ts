@@ -1,4 +1,4 @@
-import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
+import FlyLang, { ParsableObjectInformations, ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import safeSplit, { createSplitError } from "../../utils/tools/safeSplit.js";
@@ -11,7 +11,7 @@ export type ArrayReturn = {
     type: "array",
     data: {
         values: ParsableObjectList[]
-    }
+    },
 }
 
 const { objects } = rules                

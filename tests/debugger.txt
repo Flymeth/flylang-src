@@ -1,23 +1,271 @@
+#CLASS_CONSTRUCTOR
+  NAME: Animal
+  CONSTRUCTOR: 
+    #FUNCTION_ASIGNATION
+      NAME: <ANONYMOUS>
+      ARGUMENTS: type; size
+      EXECUTION: 
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: type
+                  #variable
+            #attribute_access
+          VALUE: 
+            #VARIABLE
+              NAME: type
+            #variable
+        #variable_asignation
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: width
+                  #variable
+            #attribute_access
+          VALUE: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: size
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #NUMBER
+                    VALUE: 0
+                  #number
+            #attribute_access
+        #variable_asignation
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: height
+                  #variable
+            #attribute_access
+          VALUE: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: size
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #NUMBER
+                    VALUE: 0
+                  #number
+            #attribute_access
+        #variable_asignation
+    #function_asignation
+  ATTRIBUTES/PROPERTIES: 
+    #FUNCTION_ASIGNATION
+      NAME: displayInformations
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #ATTRIBUTE_ACCESS
+          ORIGIN: 
+            #VARIABLE
+              NAME: std
+            #variable
+          ACCESS:
+            INDEX_VALUE: 
+              #FUNCTION_CALL
+                FUNCTION: in
+                ARGUMENTS: 
+                  #STRING
+                    CONTENT:
+                    
+                      #ATTRIBUTE_ACCESS
+                        ORIGIN: 
+                          #VARIABLE
+                            NAME: me
+                          #variable
+                        ACCESS:
+                          INDEX_VALUE: 
+                            #VARIABLE
+                              NAME: type
+                            #variable
+                      #attribute_access  ": "
+                      #ATTRIBUTE_ACCESS
+                        ORIGIN: 
+                          #VARIABLE
+                            NAME: me
+                          #variable
+                        ACCESS:
+                          INDEX_VALUE: 
+                            #VARIABLE
+                              NAME: width
+                            #variable
+                      #attribute_access  "x"
+                      #ATTRIBUTE_ACCESS
+                        ORIGIN: 
+                          #VARIABLE
+                            NAME: me
+                          #variable
+                        ACCESS:
+                          INDEX_VALUE: 
+                            #VARIABLE
+                              NAME: height
+                            #variable
+                      #attribute_access
+                  #string
+              #function_call
+        #attribute_access
+    #function_asignation
+#class_constructor
+#CLASS_CONSTRUCTOR
+  NAME: Eigle
+  EXTENDS FROM: Animal
+  CONSTRUCTOR: 
+    #FUNCTION_ASIGNATION
+      NAME: <ANONYMOUS>
+      ARGUMENTS: name; weight
+      EXECUTION: 
+        #FUNCTION_CALL
+          FUNCTION: Animal
+          ARGUMENTS: 
+            #STRING
+              CONTENT:
+                "eigle"
+            #string
+            #ARRAY
+              
+                #NUMBER
+                  VALUE: 15
+                #number
+              
+                #NUMBER
+                  VALUE: 24
+                #number
+            #array
+        #function_call
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: name
+                  #variable
+            #attribute_access
+          VALUE: 
+            #VARIABLE
+              NAME: name
+            #variable
+        #variable_asignation
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: weight
+                  #variable
+            #attribute_access
+          VALUE: 
+            #VARIABLE
+              NAME: weight
+            #variable
+        #variable_asignation
+    #function_asignation
+  ATTRIBUTES/PROPERTIES: 
+    #FUNCTION_ASIGNATION
+      NAME: displayCard
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #ATTRIBUTE_ACCESS
+          ORIGIN: 
+            #VARIABLE
+              NAME: std
+            #variable
+          ACCESS:
+            INDEX_VALUE: 
+              #FUNCTION_CALL
+                FUNCTION: in
+                ARGUMENTS: 
+                  #STRING
+                    CONTENT:
+                      "Informations about "
+                      #ATTRIBUTE_ACCESS
+                        ORIGIN: 
+                          #VARIABLE
+                            NAME: me
+                          #variable
+                        ACCESS:
+                          INDEX_VALUE: 
+                            #VARIABLE
+                              NAME: name
+                            #variable
+                      #attribute_access  ":\n"
+                  #string
+              #function_call
+        #attribute_access
+        #ATTRIBUTE_ACCESS
+          ORIGIN: 
+            #VARIABLE
+              NAME: me
+            #variable
+          ACCESS:
+            INDEX_VALUE: 
+              #FUNCTION_CALL
+                FUNCTION: displayInformations
+              #function_call
+        #attribute_access
+    #function_asignation
+#class_constructor
+#VARIABLE_ASIGNATION
+  STORED IN: 
+    #VARIABLE
+      NAME: monPiaf
+    #variable
+  VALUE: 
+    #CLASS_INSTANCIATION
+      CLASS: Eigle
+      PARAMETERS: 
+        #STRING
+          CONTENT:
+            "leMoche"
+        #string,
+        #NUMBER
+          VALUE: 996
+        #number
+    #class_instanciation
+#variable_asignation
 #ATTRIBUTE_ACCESS
   ORIGIN: 
     #VARIABLE
-      NAME: std
+      NAME: monPiaf
     #variable
   ACCESS:
     INDEX_VALUE: 
       #FUNCTION_CALL
-        FUNCTION: out
-        ARGUMENTS: 
-          #ATTRIBUTE_ACCESS
-            ORIGIN: 
-              #NUMBER
-                VALUE: 2.5
-              #number
-            ACCESS:
-              INDEX_VALUE: 
-                #FUNCTION_CALL
-                  FUNCTION: asStr
-                #function_call
-          #attribute_access
+        FUNCTION: displayCard
       #function_call
 #attribute_access

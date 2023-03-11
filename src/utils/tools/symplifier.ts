@@ -23,7 +23,7 @@ function splitAndRemoveUselessPriorities(code: string, prioritiesCloser= rules.b
 function simplifyPriorities(code: string): string[] | null {
     const symplifies_end = [...rules.block.closer, ...rules.objects.closer]
     const symplifies_start= [...rules.block.openner, ...rules.objects.openner]
-    const splitted = splitAndRemoveUselessPriorities(code, symplifies_end)
+    const splitted = splitAndRemoveUselessPriorities(code, symplifies_end)    
     if(!splitted) return null
 
     return splitted.map((value, index) => {
@@ -33,8 +33,9 @@ function simplifyPriorities(code: string): string[] | null {
         const priorityIndex = multipleSearch(value, [opener])
 
         const before = value.slice(0, priorityIndex)
-        if(rules.keywords.find(key => before === key)) return value
-        
+        //? Idk why I wrote this following line so I keep it here.
+        // if(rules.keywords.find(key => before === key)) return value
+
         const isFunction = before && multipleEndsWith(before, [/[a-z]\w*\s*/i])
         if(isFunction || priorityIndex > 0) {
             const letter = isFunction ? `(${generateLetter(index)})` : generateLetter(index)
@@ -67,7 +68,7 @@ export function codeSimplifier(code: string): string | null {
 /**
  * ! **PLEASE EXECUTE THIS FUNCTION ONLY ON A CODE PORTION FOR THE BEST CONDITIONS** !
  * > Remove comments from the given code
- * > Note that if the given code contain unlicly a comment code, this function will return the same given code.
+ * > Note that if the given code contain unicly a comment code, this function will returns the same given code.
  */
 export function removeComments(code: string): string {
     const executed = CommentaryRegexps.fast.exec(code)

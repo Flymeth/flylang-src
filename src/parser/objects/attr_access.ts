@@ -1,4 +1,4 @@
-import Parser, { ParsableObjectList, ParserClassData } from "../parser.js";
+import Parser, { ParsableObjectInformations, ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import Positioner from "../../utils/positioner.js";
 import safeSplit from "../../utils/tools/safeSplit.js";

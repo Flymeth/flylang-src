@@ -36,7 +36,7 @@ export default class VariableAsignation extends CompilerObject {
     async parse(code: Positioner): Promise<VariableAsignationReturn | null> {
         const details = this.regexps.detailed.exec(code.now)
         if(!details || !details.groups?.name) return null
-
+        
         const [name, value] = safeSplit(code, [":"], false, 1)
         const operation = multipleEndsWith(name.now, operationsString)
         if(operation) name.end-= operation.length
@@ -44,8 +44,8 @@ export default class VariableAsignation extends CompilerObject {
         const isConstant = !!details.groups.constant
         if(isConstant) value.start++
 
-        if(isConstant && operation) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Cannot perfom operation in a constant variable declaration.")).raise()
-
+        if(isConstant && operation) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Cannot perfom operation to a constant variable declaration.")).raise()
+        
         const parsedName = await FlyLang.parse(this.data, name, [
             new Variable(this.data), new Array(this.data, [new Variable(this.data)]), new AttrAccess(this.data)
         ]) as VariableNameType | null
@@ -59,7 +59,7 @@ export default class VariableAsignation extends CompilerObject {
 
         const value_code = operation ? new Positioner(`${name.now}${operation}${value.now}`, code) : value
 
-        const parsedValue = await FlyLang.parse(this.data, value_code, variableAcceptedObjects(this.data).filter(obj => !(obj instanceof FunctionAsignation)))
+        const parsedValue = await FlyLang.parse(this.data, value_code, [new VariableAsignation(this.data), ...variableAcceptedObjects(this.data).filter(obj => !(obj instanceof FunctionAsignation))])
         if(!parsedValue) new RaiseFlyLangCompilerError(new SyntaxError(value_code)).raise()
         
         return {

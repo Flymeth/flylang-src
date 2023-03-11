@@ -55,6 +55,7 @@ function stringify(data: ParsedObject, defaultIndent= 0): (string | null)[] {
             if(data.data.type === "else") return mapExec(data.data.code)
             return [
                 `CONDITION: ${exec(data.data.condition)}`,
+                `EXECUTION: ${mapExec(data.data.code).join('\n')}`,
                 data.data.else ? `ELSE: ${exec({type: "if_statement", data: data.data.else})}` : null
             ]
         }
