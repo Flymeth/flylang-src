@@ -398,7 +398,7 @@ export default class Interpreter {
                     first: await this.eval(data.operators[0]) || data.operators[0],
                     second: await this.eval(data.operators[1]) || data.operators[1]
                 }
-                
+
                 if(data.operation === "addition") {
                     if(operations.first.type === operations.second.type) {
                         // Bellow there is "as ..." because the 2 operators are the same and ts/intelisense doens't understand that.
@@ -734,6 +734,11 @@ export default class Interpreter {
                     }
                 }
 
+                break;
+            }
+            case "number": {
+                // After a JSON.parse(JSON.stringify), the number instance is parsed in a string representation of the number
+                if(!(data.number instanceof BigNumber)) data.number = new BigNumber(data.number)
                 break;
             }
             case "comment": {

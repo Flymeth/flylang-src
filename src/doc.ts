@@ -4,6 +4,8 @@ import { Arguments, DotProperties } from "./utils/readers.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { RegExp_AND } from "./utils/tools/regExpTools.js";
+//@ts-ignore - Exported in the same directory scope
+import {version} from "../package.json";
 
 marked.setOptions({
     renderer: new terminalMdParser({
@@ -30,5 +32,6 @@ export default function accessToDoc(args: Arguments, props: DotProperties): void
     else if(args.getOptionValue('syntax')) return render(markdowns.syntax)
     else if(args.getOptionValue('info')) return render(markdowns.main)
     else if(args.getOptionValue('props')) return render(props.getProperties.map(({key, value}, index) => `[${index + 1}]> *${key}* = **${value}**`).join('\r\n'))
-    else console.log("ERROR => Invalid argument.");
+    else if(args.getOptionValue('version')) return console.info(version)
+    else console.error("ERROR => Invalid argument.");
 }

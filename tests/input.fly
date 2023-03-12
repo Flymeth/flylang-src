@@ -1,4 +1,2 @@
-import maths only (factorial)
-factorialOf: std.in().asNbr()
-std.cls()
-std.out("&(factorialOf)! = &(factorial(factorialOf))")
+import maths
+std.out(factorial(pi))

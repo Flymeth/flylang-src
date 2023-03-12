@@ -61,7 +61,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                             obj.data.values.map(async (e) => ({...e, value: await interpMethods.eval(e.value)}))
                         )
                     }
-                    return JSON.parse(JSON.stringify(obj))
+                    return await interpMethods.eval(JSON.parse(JSON.stringify(obj)))
                 },
                 async range(fromObj, toObj, stepObj, ..._) {
                     if(!fromObj) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range requires at least 1 argument.")).raise()

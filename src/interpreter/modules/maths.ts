@@ -31,14 +31,14 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
         functions: {
             async cos(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosinus with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosine with a non-number value.")).raise()
                 
                 const res =  BhaskaraCosCalculation(nb.data.number)
                 return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
             },
             async sin(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosinus with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a sine with a non-number value.")).raise()
                 
                 let x = nb.data.number
                 while(x.isGreaterThan(pi)) x = x.minus(twoPI)
@@ -58,11 +58,17 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
             },
             async factorial(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosinus with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a factorial with a non-number value.")).raise()
                 
                 let res = new BigNumber(1)
                 for(let i = nb.data.number; i.isGreaterThan(1); i= i.minus(1)) res= res.multipliedBy(i)
                 return {type: "number", data: {negative: res.isNegative(), number: res, type: res.isInteger() ? "integer" : "float"}}
+            },
+            async sqrt(nb, ..._) {
+                nb = await intrp.eval(nb)
+                if(nb.type !== "number" || nb.data.number.isNaN() || nb.data.number.isLessThan(0)) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Square root can only be calculated with a positive number.")).raise()
+                const res = nb.data.number.sqrt()
+                return {type: "number", data: {negative: false, number: res, type: res.isInteger() ? "integer" : "float"}}
             }
         },
         objects: {}

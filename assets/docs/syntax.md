@@ -165,4 +165,30 @@ This feature import flylang's code from another file or import a module's featur
 
 ```doc
 import <module / file path> [only (import1, import2, ...)] [in <variable name>]
+\-------------------------/ \----------------------------/ \------------------/
+    Import all module           Import only the given       Set the imported
+        data                            data                data into a variable
 ```
+
+### Builtin modules
+
+#### Maths
+
+`import maths ...`
+This module countain variables/functions tool related to mathematics
+
+##### Maths - Variables
+
+name|description
+---|---
+pi|The PI value
+
+##### Maths - Functions
+
+name|description|argument(s)
+---|---|---
+cos|Calculate the cosine of a number|`number`
+sin|Calculate the sine of a number|`number`
+tan|Calculate the tangent of a number|`number`
+factorial|Calculate the factorial of a number (number!)|`number`
+sqrt|Calculate the square root of a positive number|`number` (> 0)
