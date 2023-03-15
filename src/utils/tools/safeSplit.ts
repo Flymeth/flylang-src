@@ -62,10 +62,10 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
                 return !!values.reduce((pre, cur) => pre + cur, 0)
             }
         }        
-
+        
         while(!foundSplitter && position.end < position.global.length) {
             position.end++
-            const content = position.now            
+            const content = position.now
             
             if(deep.object && !deep.string && !deep.comment && multipleEndsWith(content, objects.closer)) deep.object--
             else if(deep.string && !deep.comment && deep.cache.str_char === multipleEndsWith(content, string.closer) && numberOfCharEnding(content.slice(0, content.length - 1), "\\") % 2 === 0) deep.string--, delete deep.cache.str_char
@@ -90,8 +90,8 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
                     break
                 }
             }
-        }        
-        
+        }
+
         if(deep.insideBlock()) throw new RaiseFlyLangCompilerError(createSplitError(position)).raise()
         const value = position.split()
         if(foundSplitter && !keepSplitter) value.end-= foundSplitter.length

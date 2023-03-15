@@ -33,14 +33,15 @@ function simplifyPriorities(code: string): string[] | null {
         const priorityIndex = multipleSearch(value, [opener])
 
         const before = value.slice(0, priorityIndex)
-        //? Idk why I wrote this following line so I keep it here.
-        // if(rules.keywords.find(key => before === key)) return value
+        //? For things like "if(...,)"
+        if(rules.keywords.find(key => before === key)) return value
 
-        const isFunction = before && multipleEndsWith(before, [/[a-z]\w*\s*/i])
-        if(isFunction || priorityIndex > 0) {
+        const isFunction = before && multipleEndsWith(before, [/[a-z]\w*\s*/i])        
+        if(isFunction || priorityIndex > 0 || splitted[index + 1]?.startsWith('.')) {
             const letter = isFunction ? `(${generateLetter(index)})` : generateLetter(index)
             return before + letter
         }
+        
         return value
     })
 }

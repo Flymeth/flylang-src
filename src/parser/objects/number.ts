@@ -18,7 +18,7 @@ export default class Number extends CompilerObject {
             detailed: /(?<sign>[+-])?(?<integer>(?:\d_?)+)?(?:\.(?<float>(?:\d_?)+))?/
         })
         
-        this.bonus_score+= 1
+        this.bonus_score+= 2
     }
 
     async parse(code: Positioner): Promise<NumberReturn | null> {

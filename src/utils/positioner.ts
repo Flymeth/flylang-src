@@ -27,7 +27,7 @@ export default class Positioner {
         },
         data: Positioner
     }[]= []
-    file: PositionerFilePath
+    file?: PositionerFilePath
 
     /**
      * @param content The code where the positioner will take action
@@ -196,8 +196,7 @@ export default class Positioner {
             return this
         }
         
-        this.start+= this.now.indexOf(trimed)
-        this.end= this.start + trimed.length
+        this.take(trimed)
         return this
     }
 

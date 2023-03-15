@@ -28,7 +28,7 @@ export default class Array extends CompilerObject {
         super(data, "array", `{0, 12, 3}`, ArrayRegExps)
         
         this.restrictedWith = restriction
-        this.bonus_score-= 1
+        this.bonus_score+= 1
     }
 
     async parse(position: Positioner): Promise<ArrayReturn | null> {

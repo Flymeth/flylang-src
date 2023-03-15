@@ -34,7 +34,7 @@ export default class DictObject extends CompilerObject {
             && detailed.groups?.items
         )) return null
 
-        if(detailed.groups.items === ":") return {
+        if(detailed.groups.items?.trim() === ":") return {
             type: "object",
             data: {
                 values: []
@@ -42,22 +42,21 @@ export default class DictObject extends CompilerObject {
         }
         
         const items_code = code.take(detailed.groups.items).autoTrim()
-        
         const splitted = safeSplit(items_code, [","])
         const items: DictObjectReturn["data"]["values"] = []
         
         if(splitted.length) {
-            for await(const value of splitted) {
-                const splittedVal = value.autoTrim().now.startsWith(':') ? [
+            for await(const value of splitted) {                
+                const splittedVal = value.autoTrim(undefined, true, false).now.startsWith(':') ? [
                     null, (() => {
                         value.start++; return value.split()
                     })()
-                ] : safeSplit(value, [":"])            
+                ] : safeSplit(value, [":"], false, 1)
                 if(!splittedVal) throw new RaiseFlyLangCompilerError(fastSyntaxError(value, "Invalid object syntax.")).raise()
                 
-                const [key, val] = splittedVal.map(e => e?.autoTrim())
+                const [key, val] = splittedVal.map(e => e?.split().autoTrim(rules.trim_chars.concat(",")))
                 if(!val) throw new RaiseFlyLangCompilerError(fastSyntaxError(value, "This is not a valid object value.")).raise()
-
+                
                 const parsedVal = await FlyLang.parse(this.data, val, variableAcceptedObjects(this.data))
                 if(!parsedVal) throw new RaiseFlyLangCompilerError(fastSyntaxError(val, "Invalid object syntax.")).raise()
     

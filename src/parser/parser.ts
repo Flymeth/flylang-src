@@ -70,10 +70,13 @@ export type ParsedObject = ParsableObjectList & ParsableObjectInformations
 export type ParserReturn = {
     origin: {
         inherit?: ParserReturn,
-        /**
-         * Path of the file
-         */
-        file?: string
+        file?: {
+            /**
+             * Path of the file
+             */
+            path: string,
+            content: string
+        }
     },
     content: ParsedObject[]
 }
@@ -146,18 +149,21 @@ export default class Parser {
 
     static async parse(data: ParserClassData, position: Positioner, parsingObjects?: CompilerObject[]): Promise<ParsableObjectList & ParsableObjectInformations | null> {
         const {now} = position
+        
         const tester = removeComments(codeSimplifier(now) || "")
         if(!tester) return null
         
-        const objects = parsingObjects || data.objects        
+        const objects = parsingObjects || data.objects
+        if(objects.length <= 1) objects[0].testScore(tester)
+
         const sorted = objects.sort((a, b) => b.testScore(tester) - a.testScore(tester))
-        const obj = sorted[0]        
-        
+        const obj = sorted[0]
         if(obj.testedScore === -Infinity) return null
         
         const focusedCode = removeComments(removeUselessPriorities(now) || "")
         if(!focusedCode) return null
         const result = await obj.parse(new Positioner(focusedCode, position, position.file))
+        
         if(!result) return null
         return {
             ...result,
@@ -184,12 +190,17 @@ export default class Parser {
                 compiled.push(result)
             }
         }
-        
         this.data.file.dist.data = compiled
+
+        const originFile: ParserReturn["origin"]["file"] = this.data.file.src.path ? {
+            path: this.data.file.src.path.value,
+            content: this.data.file.src.content || ""
+        } : undefined
+
         return {
             origin: {
                 inherit: inherits,
-                file: this.data.file.src.path?.value
+                file: originFile
             },
             content: compiled
         }

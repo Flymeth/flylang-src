@@ -1,22 +1,22 @@
-const {BigNumber} = require('bignumber.js')
+const { readdirSync } = require("fs");
+const { join } = require("path");
+const {createInterface} = require('readline/promises')
 
-const angle = Math.PI / 2 + .25
-const n = new BigNumber(angle)
+const objs = readdirSync(join(__dirname, '../dist/parser/objects')).filter(f => !f.startsWith('_') && f.endsWith('.js')).map(e => e.split('.js')[0])
+const result = {}
 
+const lineReader = createInterface(process.stdin, process.stdout)
+;(async () => {
+    for await(const objName of objs) {
+        result[objName] = 0
+        const skip = Object.keys(result)
+        for await(const tester of objs.filter(e => !skip.includes(e))) {
+            console.clear()
+            const a = parseInt(await lineReader.question(`${objName} -> ${tester}:\n[1] ${objName} > ${tester}\n[0] ${objName} = ${tester}\n[-1] ${objName} < ${tester}\n>>> `))
+            if(isNaN(a)) continue
+            result[objName]+= a
+        }
+    }
 
-const pi = new BigNumber("3.1415926535897932384626433832795028841971693993751")
-/**
- * Calculate cos with the Bhaskara Formula
- * @link https://en.wikipedia.org/wiki/Bhaskara_I%27s_sine_approximation_formula
- */
-function BhaskaraCosCalculation(x) {
-    const [halfPI, twoPI, powedPI] = [pi.dividedBy(2), pi.multipliedBy(2), pi.pow(2)]
-    while(x.isGreaterThan(halfPI)) x = x.minus(twoPI)
-    while(x.isLessThan(halfPI.multipliedBy(-1))) x = x.plus(twoPI)
-
-    if(x.isGreaterThan(halfPI)) return BhaskaraCosCalculation(x.minus(halfPI)).multipliedBy(-1)
-    const powedX = x.pow(2)
-    return powedPI.minus(twoPI.multipliedBy(2)).dividedBy(powedPI.plus(powedX))
-}
-
-console.log(BhaskaraCosCalculation(n).toFixed(), Math.cos(angle));
+    console.log(result);
+})()

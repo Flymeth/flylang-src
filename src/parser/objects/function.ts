@@ -22,6 +22,8 @@ export default class FunctionCall extends CompilerObject {
             fast: new RegExp(fast.source + '\\(.*?\\)', "si"),
             detailed: /(?<name>(?:[a-z_])(?<!\.)\w*)\((?<arguments>.*)\)/si
         })
+        
+        this.bonus_score-= 1
     }
 
     async parse(code: Positioner): Promise<FunctionCallReturn | null> {

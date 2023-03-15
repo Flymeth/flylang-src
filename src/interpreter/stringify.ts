@@ -1,4 +1,5 @@
 import eToNumber from "../lib/eToNumber.js";
+import { StringReturn } from "../parser/objects/string.js";
 import { ParsedObject } from "../parser/parser.js";
 import chalk from "chalk";
 
@@ -28,6 +29,9 @@ export function removeUselessBackSlashInStr(str: string): string {
         }
     }
     return str2
+}
+export function createStringObj(data: string): StringReturn {
+    return {type: "string", data: [{type: "text", data: data.replaceAll('\\', '\\\\')}]}
 }
 
 export default function stringify(object: ParsedObject, colors= false, insideObject= false): string {
@@ -126,6 +130,7 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
         }
         case "string": {
             const baseString = data.map(v => v.type === "text" ? removeUselessBackSlashInStr(v.data) : `&(${stringify(v.data, colors)})`).join('')
+            
             const insideObjectString = insideObject ? `"${baseString}"` : baseString
             const coloredString = colors ? chalk.green(insideObjectString) : insideObjectString
             return coloredString

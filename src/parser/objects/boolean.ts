@@ -28,7 +28,7 @@ export default class BooleanTest extends CompilerObject {
             detailed: new RegExp(`(?<tester_secondary>.*?)\s*(?<test>[${boolChars.join("")}])\s*(?<tester_primary>.+)`, "si")
         })
         
-        this.bonus_score-= 2
+        this.bonus_score-= 3
     }
 
     async parse(position: Positioner): Promise<BooleanTestReturn | null> {

@@ -26,6 +26,8 @@ export const ClassConstrRegexps= {
 export default class ClassConstr extends CompilerObject {
     constructor(data: ParserClassData) {
         super(data, "class_constructor", `cs MyClass(\n  fn (arg1, arg2,\n    |This is the constructor|\n  )\n)`, ClassConstrRegexps)
+
+        this.bonus_score+= 2
     }
 
     async parse(code: Positioner): Promise<ClassConstrReturn | null> {
@@ -34,6 +36,7 @@ export default class ClassConstr extends CompilerObject {
         const   name = detailed.groups.name,
                 content = detailed.groups.data
         ;
+        
         if(langRules.keywords.find(w => w === name)) throw new RaiseFlyLangCompilerError(new NameError(code, name)).raise()
 
         const splittedContent = safeSplit(code.take(content), [","])

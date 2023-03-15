@@ -18,14 +18,14 @@ export type AttrAccessReturn = {
         access: AttrAccessDataItem[]
     }
 }
+export const AttrAccessRegExps = {
+    fast: new RegExp(`.+(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is'),
+    detailed: new RegExp(`(?<origin>.+)(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is')
+}
 export default class AttrAccess extends CompilerObject {
     constructor(data: ParserClassData) {
-        super(data, "attribute_access", `my_var.attr.function()`, {
-            fast: new RegExp(`.+(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is'),
-            detailed: new RegExp(`(?<origin>.+)(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is')
-        })
-
-        this.bonus_score-= 2
+        super(data, "attribute_access", `my_var.attr.function()`, AttrAccessRegExps)
+        this.bonus_score-= 3
     }
 
     async parse(content: Positioner): Promise<AttrAccessReturn | null> {

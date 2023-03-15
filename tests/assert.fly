@@ -1,0 +1,33 @@
+import maths
+import maths in m
+import maths only (cos) in m
+
+a: .1+.2
+verified:: b: a = 0_000_000.3
+std.out(verified)
+
+cs Animal(
+    fn(type, age, TTL,
+        me.data: {
+            type: type,
+            age: age,
+            ttl: TTL
+        }
+    ),
+
+    fn dieIn(
+        return me.data.ttl - me.data.age
+    )
+    fn birthday(
+        me.data.age+: 1
+    )
+)
+
+cs Cat(Animal,
+    fn(name,
+        Animal("cat", 0, 19)
+        me.data.name: name
+    ),
+)
+
+std.out(new Cat("felix"))

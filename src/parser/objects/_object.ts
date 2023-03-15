@@ -22,13 +22,16 @@ export default class CompilerObject {
         this.testedScore= -Infinity
     }
 
-    private setScore(score: number) {
+    private setScore<scoreN extends number>(score: scoreN): scoreN {
         this.testedScore= score
         return score
     }
 
     testScore(tester: string): number {
         const regRes = this.regexps.fast.exec(tester)
+
+        // console.log(tester, regRes, this.help.type);
+        
         if(!regRes || regRes.index || regRes[0].length < tester.length) return this.setScore(-Infinity)
         const score = regRes[0].length - regRes.index + this.bonus_score
 

@@ -16,11 +16,11 @@ export type ClassInstanciationReturn = {
 export default class ClassInstanciation extends CompilerObject {
     constructor(data: ParserClassData) {
         super(data, "class_instanciation", `new MyClass()`, {
-            fast: /new\s*[a-z_]\w*\s*\(.*\)/i,
-            detailed: /new\s*(?<name>[a-z_]\w*)\s*\((?<properties>.*)\)/i
+            fast: /new\s*[a-z_]\w*?\s*\(.*?\)/i,
+            detailed: /new\s*(?<name>[a-z_]\w*?)\s*\((?<properties>.*?)\)/i
         })
 
-        this.bonus_score+= 1
+        this.bonus_score+= 2
     }
 
     async parse(code: Positioner): Promise<ClassInstanciationReturn | null> {

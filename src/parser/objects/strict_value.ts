@@ -15,7 +15,7 @@ export default class StrictValue extends CompilerObject {
             fast: new RegExp(allowedKeyword.join('|')),
             detailed: new RegExp(`(?<value>${allowedKeyword.join('|')})`)
         })
-        this.bonus_score+= 2
+        this.bonus_score+= 5
     }
 
     async parse(code: Positioner): Promise<StrictValueReturn | null> {

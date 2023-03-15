@@ -1,22 +1,304 @@
-#IMPORT
-  IMPORTED FROM <module>: maths
-#import
+#CLASS_CONSTRUCTOR
+  NAME: Animal
+  CONSTRUCTOR: 
+    #FUNCTION_ASIGNATION
+      NAME: <ANONYMOUS>
+      ARGUMENTS: type; age; TTL
+      EXECUTION: 
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: data
+                  #variable
+            #attribute_access
+          VALUE: 
+            #OBJECT
+              #0 => KEY: type; VALUE: 
+                #VARIABLE
+                  NAME: type
+                #variable
+              #1 => KEY: age; VALUE: 
+                #VARIABLE
+                  NAME: age
+                #variable
+              #2 => KEY: ttl; VALUE: 
+                #VARIABLE
+                  NAME: TTL
+                #variable
+            #object
+        #variable_asignation
+    #function_asignation
+  ATTRIBUTES/PROPERTIES: 
+    #FUNCTION_ASIGNATION
+      NAME: diesIn
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #STOPPER
+          TYPE: fct_returns
+          ENDING_VALUE: 
+            #OPERATION
+              OPERATION: substraction
+              OPERATOR 1: 
+                #ATTRIBUTE_ACCESS
+                  ORIGIN: 
+                    #VARIABLE
+                      NAME: me
+                    #variable
+                  ACCESS:
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: data
+                      #variable
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: ttl
+                      #variable
+                #attribute_access
+              OPERATOR 2: 
+                #ATTRIBUTE_ACCESS
+                  ORIGIN: 
+                    #VARIABLE
+                      NAME: me
+                    #variable
+                  ACCESS:
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: data
+                      #variable
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: age
+                      #variable
+                #attribute_access
+            #operation
+        #stopper
+    #function_asignation,
+    #FUNCTION_ASIGNATION
+      NAME: birthday
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: data
+                  #variable
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: age
+                  #variable
+            #attribute_access
+          VALUE: 
+            #OPERATION
+              OPERATION: addition
+              OPERATOR 1: 
+                #ATTRIBUTE_ACCESS
+                  ORIGIN: 
+                    #VARIABLE
+                      NAME: me
+                    #variable
+                  ACCESS:
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: data
+                      #variable
+                    INDEX_VALUE: 
+                      #VARIABLE
+                        NAME: age
+                      #variable
+                #attribute_access
+              OPERATOR 2: 
+                #NUMBER
+                  VALUE: 1
+                #number
+            #operation
+        #variable_asignation
+    #function_asignation
+#class_constructor
+#CLASS_CONSTRUCTOR
+  NAME: Cat
+  EXTENDS FROM: Animal
+  CONSTRUCTOR: 
+    #FUNCTION_ASIGNATION
+      NAME: <ANONYMOUS>
+      ARGUMENTS: name
+      EXECUTION: 
+        #FUNCTION_CALL
+          FUNCTION: Animal
+          ARGUMENTS: 
+            #STRING
+              CONTENT:
+                "cat"
+            #string
+            #NUMBER
+              VALUE: 0
+            #number
+            #NUMBER
+              VALUE: 19
+            #number
+        #function_call
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: data
+                  #variable
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: name
+                  #variable
+            #attribute_access
+          VALUE: 
+            #VARIABLE
+              NAME: name
+            #variable
+        #variable_asignation
+    #function_asignation
+  ATTRIBUTES/PROPERTIES: 
+    #FUNCTION_ASIGNATION
+      NAME: displayInformations
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #ARRAY
+              
+                #VARIABLE
+                  NAME: name
+                #variable
+              
+                #VARIABLE
+                  NAME: age
+                #variable
+            #array
+          VALUE: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #VARIABLE
+                    NAME: data
+                  #variable
+            #attribute_access
+        #variable_asignation
+        #VARIABLE_ASIGNATION
+          STORED IN: 
+            #VARIABLE
+              NAME: timeBeforeDie
+            #variable
+          VALUE: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: me
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #FUNCTION_CALL
+                    FUNCTION: diesIn
+                  #function_call
+            #attribute_access
+        #variable_asignation
+        #ATTRIBUTE_ACCESS
+          ORIGIN: 
+            #VARIABLE
+              NAME: std
+            #variable
+          ACCESS:
+            INDEX_VALUE: 
+              #FUNCTION_CALL
+                FUNCTION: out
+                ARGUMENTS: 
+                  #STRING
+                    CONTENT:
+                      "The cat "
+                      #VARIABLE
+                        NAME: name
+                      #variable  " is "
+                      #VARIABLE
+                        NAME: age
+                      #variable  "yo and will die in "
+                      #VARIABLE
+                        NAME: timeBeforeDie
+                      #variable  " year(s)"
+                  #string
+              #function_call
+        #attribute_access
+    #function_asignation
+#class_constructor
+#VARIABLE_ASIGNATION
+  STORED IN: 
+    #VARIABLE
+      NAME: myCat
+    #variable
+  VALUE: 
+    #CLASS_INSTANCIATION
+      CLASS: Cat
+      PARAMETERS: 
+        #STRING
+          CONTENT:
+            "felix"
+        #string
+    #class_instanciation
+#variable_asignation
+#LOOP
+  TYPE: FOR
+  ITERATOR: 
+    #FUNCTION_CALL
+      FUNCTION: range
+      ARGUMENTS: 
+        #NUMBER
+          VALUE: 5
+        #number
+    #function_call
+  EXECUTION: 
+    #FUNCTION_ASIGNATION
+      NAME: <ANONYMOUS>
+      ARGUMENTS: <WITHOUT>
+      EXECUTION: 
+        #ATTRIBUTE_ACCESS
+          ORIGIN: 
+            #VARIABLE
+              NAME: myCat
+            #variable
+          ACCESS:
+            INDEX_VALUE: 
+              #FUNCTION_CALL
+                FUNCTION: birthday
+              #function_call
+        #attribute_access
+    #function_asignation
+#loop
 #ATTRIBUTE_ACCESS
   ORIGIN: 
     #VARIABLE
-      NAME: std
+      NAME: myCat
     #variable
   ACCESS:
     INDEX_VALUE: 
       #FUNCTION_CALL
-        FUNCTION: out
-        ARGUMENTS: 
-          #FUNCTION_CALL
-            FUNCTION: clone
-            ARGUMENTS: 
-              #VARIABLE
-                NAME: pi
-              #variable
-          #function_call
+        FUNCTION: displayInformations
       #function_call
 #attribute_access

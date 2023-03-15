@@ -1,10 +1,5 @@
-fn add(a, b,
-    return a + b
-)
+a: true
+fn e(
 
-fn mul(a, b,
-    if(a = 0 ? b = 0,
-        return 0
-    )
-    return add(a, mul(a, b - 1))
+    std.out("hello", a)
 )

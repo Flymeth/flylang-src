@@ -30,6 +30,7 @@ export default class VariableAsignation extends CompilerObject {
             fast: new RegExp(`.+?\\s*(?:${operaters.source}|:)?\\s*:\\s*.*`, "s"),
             detailed: new RegExp(`(?<name>.+?)\\s*((?<operand>${operaters.source})|(?<constant>:))?\\s*:\\s*(?<value>.+)`, "s")
         })
+        
         this.bonus_score+= 1
     }
 

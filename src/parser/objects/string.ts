@@ -23,8 +23,6 @@ export default class String extends CompilerObject {
             fast: new RegExp(`([${string.openner.join("")}]).*\\1`, 's'),
             detailed: new RegExp(`(?<char>[${string.openner.join("")}])(?<content>.*)\\k<char>`, 's')
         })
-
-        this.bonus_score-= 1
     }
     
     private endingWithCharSkip(str: string): boolean {

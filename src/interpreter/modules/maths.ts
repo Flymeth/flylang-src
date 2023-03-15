@@ -6,19 +6,43 @@ import OperationError from "../../errors/interpreter/operationError";
 import { NumberReturn } from "../../parser/objects/number";
 
 const pi = new BigNumber("3.1415926535897932384626433832795028841971693993751")
-const [halfPI, twoPI, powedPI] = [pi.dividedBy(2), pi.multipliedBy(2), pi.pow(2)]
+const [halfPI, twoPI] = [pi.dividedBy(2), pi.multipliedBy(2)]
+const nToFactorialOf2n = new Array(25).fill(null).map((_, n) => {
+    const twoN = new BigNumber(2 * (n + 1)) // (n + 1) because we start at 2 (and not 0)
+    const fact = factorial(twoN)
+    return {twoN, fact}
+})
+const knownCosValues: Map<string, BigNumber>= new Map()
+knownCosValues.set("0", new BigNumber(1))
+knownCosValues.set(halfPI.toFixed(), new BigNumber(0))
+knownCosValues.set(pi.toFixed(), new BigNumber(-1))
+knownCosValues.set(halfPI.multipliedBy(3).toFixed(), new BigNumber(0))
+
+function factorial(x: BigNumber): BigNumber {
+    let res = new BigNumber(1)
+    for(let i = x; i.isGreaterThan(1); i= i.minus(1)) res= res.multipliedBy(i)
+    return res
+}
 /**
- * Calculate cos with the Bhaskara Formula
- * @link https://en.wikipedia.org/wiki/Bhaskara_I%27s_sine_approximation_formula
- */
- function BhaskaraCosCalculation(x: BigNumber): BigNumber {
-    while(x.isGreaterThan(halfPI)) x = x.minus(twoPI)
-    while(x.isLessThan(halfPI.multipliedBy(-1))) x = x.plus(twoPI)
+* Calculate cos with the Bhaskara Formula
+* @link https://en.wikipedia.org/wiki/Taylor_series
+* @link https://www.quora.com/How-can-CosX-be-calculated-by-hand
+*/
+function TaylorCosCalculation(x: BigNumber): BigNumber {
+    x= x.modulo(twoPI)
+    let res = knownCosValues.get(x.toFixed())
 
-    if(x.isGreaterThan(pi)) return BhaskaraCosCalculation(x.minus(halfPI)).multipliedBy(-1)
-
-    const powedX = x.pow(2)
-    return powedPI.minus(powedX.multipliedBy(4)).dividedBy(powedPI.plus(powedX))
+    if(!res) {
+        res = new BigNumber(1)
+        let sign = -1
+        for(const {twoN, fact} of nToFactorialOf2n) {
+            res = res.plus(
+                x.pow(twoN).dividedBy(fact).multipliedBy(sign)
+            )
+            sign*= -1
+        }
+    }
+    return res
 }
 
 export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
@@ -33,7 +57,7 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
                 nb = await intrp.eval(nb)
                 if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosine with a non-number value.")).raise()
                 
-                const res =  BhaskaraCosCalculation(nb.data.number)
+                const res =  TaylorCosCalculation(nb.data.number)
                 return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
             },
             async sin(nb, ..._) {
@@ -44,7 +68,7 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
                 while(x.isGreaterThan(pi)) x = x.minus(twoPI)
                 while(x.isLessThan(0)) x = x.plus(twoPI)
                 
-                const cos = BhaskaraCosCalculation(x)
+                const cos = TaylorCosCalculation(x)
                 
                 const res = new BigNumber(1).minus(cos.pow(2)).sqrt().multipliedBy(x.isGreaterThan(pi) ? -1 : 1)
                 return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
@@ -60,8 +84,7 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
                 nb = await intrp.eval(nb)
                 if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a factorial with a non-number value.")).raise()
                 
-                let res = new BigNumber(1)
-                for(let i = nb.data.number; i.isGreaterThan(1); i= i.minus(1)) res= res.multipliedBy(i)
+                let res = factorial(nb.data.number)
                 return {type: "number", data: {negative: res.isNegative(), number: res, type: res.isInteger() ? "integer" : "float"}}
             },
             async sqrt(nb, ..._) {

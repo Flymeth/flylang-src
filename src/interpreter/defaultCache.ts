@@ -12,7 +12,7 @@ import { StringReturn } from "../parser/objects/string";
 import Parser, { ParsableObjectList } from "../parser/parser";
 import Interpreter, { UNDEFINED_TYPE } from "./interpreter";
 import {BigNumber} from "bignumber.js";
-import stringify from "./stringify";
+import stringify, { createStringObj } from "./stringify";
 
 export type methodObject<obj extends ParsableObjectList["data"]> = {
     variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
@@ -20,7 +20,11 @@ export type methodObject<obj extends ParsableObjectList["data"]> = {
 }
 export type cacheInterface = {
     registered: {
-        variables: {[key: string]: {editable: boolean, value: ParsableObjectList}},
+        /**
+         * @key value - The value of this variable (like another variable, a function call, ...)
+         * @key default - If the value is not accecible, take this instead.
+         */
+        variables: {[key: string]: {editable: boolean, value: ParsableObjectList, default?: ParsableObjectList}},
         functions: {[key: string]: FunctionAsignationReturn["data"]},
         objects: {[key: string]: {data: cacheInterface["registered"], class?: ClassConstrReturn["data"]}}
     },
@@ -50,7 +54,22 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
             objects: {}
         },
         builtin: {
-            variables: {},
+            variables: {
+                async __cwd() {
+                    const path = interpMethods.currentPosition.file?.value || "<unknow>"
+                    return createStringObj(path)
+                },
+                async __main() {
+                    const path = interpMethods.currentPosition.original.file?.value || "<unknow>"
+                    return createStringObj(path)
+                },
+                async debug() {
+                    const depth= 5
+                    interpMethods.print(`# REGISTERED:\n${inspect(interpMethods.cache.registered, false, depth)}\n# BUILTIN:\n${inspect(interpMethods.cache.builtin, false, depth)}`)
+                    await interpMethods.input("[DEBUGGER CALLED]>> Press Enter To Continue.\n")
+                    return UNDEFINED_TYPE
+                }
+            },
             functions: {
                 async clone(...args) {
                     let obj = await interpMethods.eval(args[0])
@@ -98,9 +117,11 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     if(str.type !== "string") return UNDEFINED_TYPE
                     const strContent = (await interpMethods.eval(str) as StringReturn).data[0].data as string
                     const p = new Parser({type: "manualy", data: interpMethods.data})
+                    p.data.position= interpMethods.currentPosition
+
                     const parsed = await p.compile(strContent)
                     if(!parsed) return UNDEFINED_TYPE
-                    return interpMethods.eval(parsed.content[0])
+                    return await interpMethods.process(parsed.content, true, false) || UNDEFINED_TYPE
                 }
             },
             objects: {
@@ -109,17 +130,17 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                         variables: {},
                         functions: {
                             async in(...args) {                      
-                                const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, true)))).join('')
+                                const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v) || v, process.stdout.hasColors())))).join('')
                                 const ans = await interpMethods.input(dataStr)
                                 return {type: "string", data: [{type: "text", data: ans}]}
                             },
                             async out(...args) {
-                                const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v), true)))).join(' ')
+                                const dataStr = (await Promise.all(args.map(async v => stringify(await interpMethods.eval(v), process.stdout.hasColors())))).join(' ')
                                 interpMethods.print(dataStr)
                                 return UNDEFINED_TYPE
                             },
                             async cls(..._) {
-                                console.clear()
+                                interpMethods.clear()
                                 return UNDEFINED_TYPE
                             }
                         },
@@ -187,17 +208,17 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     async len(obj) {
                         const {length} = obj.values
                         return {type: "number", data: {number: new BigNumber(length), negative: length < 0, type: length.toString().includes('.') ? 'float' : 'integer'}}
+                    },
+                    async keys(obj) {
+                        const {values} = obj
+                        return {type: "array", data: {values: values.map(({key}) => createStringObj(key))}}
+                    },
+                    async values(obj) {
+                        const {values} = obj
+                        return {type: "array", data: {values: values.map(({value}) => value)}}
                     }
                 },
-                functions: {
-                    async get(obj, key, ..._) {
-                        key = await interpMethods.eval(key)
-                        if(key.type !== "string") return UNDEFINED_TYPE
-                        const stringKey = key.data[0].data as string
-                        const element = obj.values.find(v => v.key === stringKey)
-                        return element?.value || UNDEFINED_TYPE
-                    }
-                }
+                functions: {}
             },
             string: {
                 variables: {

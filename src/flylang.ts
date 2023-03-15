@@ -16,7 +16,9 @@ const properties = new DotProperties(join(binMode ? dirname(process.execPath) : 
 const flyLangFilePath = args.getArgument(0)
 const flyLangOutPath = args.getArgument(1)
 
-!(async () => {    
+!(async () => {
+    process.title = "FlyLang"
+    
     const parser = new FlyLang({
         type: "auto",
         properties, 
