@@ -29,6 +29,7 @@ import ClassConstr, { ClassConstrReturn } from "./objects/class_construct.js"
 import ClassInstanciation, { ClassInstanciationReturn } from "./objects/class_instanciation.js"
 import Importater, { ImportaterReturn } from "./objects/import_statement.js"
 import { langRules } from "../utils/registeries.js"
+import TryStatement, { TryStatementReturn } from "./objects/tryStatement.js"
 
 export type ParserClassData = {
     arguments: Arguments,
@@ -63,7 +64,7 @@ export type  ParsableObjectList= (
     | NumberReturn | OperationReturn | StrictValueReturn | StringReturn
     | VariableAsignationReturn | VariableReturn | FunctionCallReturn | StopperReturn
     | ComparaisonReturn | BooleanTestReturn | ArrayReturn | DictObjectReturn | LoopsReturn
-    | AttrAccessReturn | ClassConstrReturn | ClassInstanciationReturn | ImportaterReturn
+    | AttrAccessReturn | ClassConstrReturn | ClassInstanciationReturn | ImportaterReturn | TryStatementReturn
 );
 export type ParsedObject = ParsableObjectList & ParsableObjectInformations
 
@@ -132,7 +133,7 @@ export default class Parser {
                 new VariableAsignation(this.data), new Variable(this.data), new FunctionAsignation(this.data), new Operation(this.data),
                 new ifStatement(this.data), new FunctionCall(this.data), new Comparaison(this.data), new BooleanTest(this.data),
                 new Stopper(this.data, ["block_pass"]), new Array(this.data), new DictObject(this.data), new Loops(this.data), new AttrAccess(this.data),
-                new ClassConstr(this.data), new ClassInstanciation(this.data), new Importater(this.data)
+                new ClassConstr(this.data), new ClassInstanciation(this.data), new Importater(this.data), new TryStatement(this.data)
             ]
         }
     }
@@ -153,7 +154,7 @@ export default class Parser {
         const tester = removeComments(codeSimplifier(now) || "")
         if(!tester) return null
         
-        const objects = parsingObjects || data.objects
+        const objects = parsingObjects || data.objects        
         if(objects.length <= 1) objects[0].testScore(tester)
 
         const sorted = objects.sort((a, b) => b.testScore(tester) - a.testScore(tester))
@@ -186,7 +187,7 @@ export default class Parser {
             if(content.autoTrim().now) {
                 const result = await Parser.parse(this.data, content.split())
                 
-                if(!result) return new RaiseFlyLangCompilerError(fastSyntaxError(content.asOriginal)).raise()
+                if(!result) throw new RaiseFlyLangCompilerError(fastSyntaxError(content.asOriginal)).raise()
                 compiled.push(result)
             }
         }

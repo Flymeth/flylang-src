@@ -142,6 +142,14 @@ function stringify(data: ParsedObject, defaultIndent= 0): (string | null)[] {
                 data.data.importType === "file" ? `IMPORTED: ${mapExec(data.data.imported.content, defaultIndent + indentation)}`: null
             ]
         }
+        case "try_statement": {
+            return [
+                `TRYING: ${mapExec(data.data.try)}`,
+                ...(data.data.handler?.data.code.length ? [
+                    `IF FAILURE [HANDLE ERROR IN "${data.data.handler.data.arguments?.[0] || "<without>"}"]: ${mapExec(data.data.handler.data.code)}`
+                ] : [])
+            ]
+        }
     }
     return ["/!\\ BLOCK ISN'T DEBUGGABLE /!\\"]
 }

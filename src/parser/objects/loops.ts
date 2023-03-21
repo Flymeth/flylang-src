@@ -52,7 +52,7 @@ export default class Loops extends CompilerObject {
         const input_code = code.take(inputs)
         const splitted = safeSplit(input_code, [","], false, 1)
         
-        if(splitted.length !== 2) return new RaiseFlyLangCompilerError(fastSyntaxError(input_code, "Loops must have only 2 arguments. One for the condition, and the other one for the execution.")).raise()
+        if(splitted.length !== 2) throw new RaiseFlyLangCompilerError(fastSyntaxError(input_code, "Loops must have only 2 arguments. One for the condition, and the other one for the execution.")).raise()
         
         this.data.objects.push(new Stopper(this.data, ["loop_breaks"]))
         const [firstArg, secondArg] = splitted

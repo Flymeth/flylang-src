@@ -1,6 +1,6 @@
 {
     "end_of_instruction": [";", "\n"],
-    "trim_chars": [";", "\n", " ", "\r"],
+    "trim_chars": [";", "\n", " ", "\r", "\t"],
     "objects": {
         "openner": ["{"],
         "closer": ["}"]
@@ -55,6 +55,6 @@
         "if", "else", "for", "while",
         "until", "cs", "fn", "new",
         "import", "only", "in", "return",
-        "pass", "break"
+        "pass", "break", "try"
     ]
 }

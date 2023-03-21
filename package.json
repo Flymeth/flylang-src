@@ -1,6 +1,6 @@
 {
   "name": "flylang",
-  "version": "0.0.6-alpha",
+  "version": "0.0.7-alpha",
   "description": "My first programing language compiler",
   "main": "dist/main.js",
   "scripts": {
@@ -37,6 +37,8 @@
   "dependencies": {
     "bignumber.js": "^9.1.1",
     "chalk": "4.1.2",
-    "marked-terminal": "^5.1.1"
+    "marked-terminal": "^5.1.1",
+    "ps-list": "7.2.0",
+    "strip-ansi": "6.0.0"
   }
 }

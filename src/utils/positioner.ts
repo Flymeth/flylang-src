@@ -184,7 +184,7 @@ export default class Positioner {
     }
 
     /**
-     * Trim the string at the current position
+     * Trim in place the string at the current position
      * @param trim_characters The character you want to trim to the current position (default to the rules.trim_chars array)
      * @param trim_start If you want to trim the start of the string (default to `true`)
      * @param trim_end If you want to trim the end of the string (default to `true`)
@@ -211,5 +211,15 @@ export default class Positioner {
         const newPos = this.split()
         this.indexes = indexes
         return newPos
+    }
+
+    /**
+     * Clone this positioner and returns it
+     */
+    clone(): Positioner {
+        const newP = new Positioner(this.global, this, this.file)
+        newP.indexes = this.indexes
+
+        return newP
     }
 }

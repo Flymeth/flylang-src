@@ -1,13 +1,19 @@
-import eToNumber from "../lib/eToNumber.js";
 import { StringReturn } from "../parser/objects/string.js";
 import { ParsedObject } from "../parser/parser.js";
 import chalk from "chalk";
 
 const validCharAfterBackSlashes = "ntr"
-export function numberOfCharEnding(inside: string, character: string) {
+export function numberOfCharEnding(inside: string, character: string): number {
     let counter = 0
     while(inside[inside.length - counter - 1] === character) counter++
     return counter
+}
+/**
+ * If the last character of the string should be consider as a character or it could be the start of a command
+ * @param content The string to test
+ */
+export function considerAsAChar(content: string): boolean {
+    return numberOfCharEnding(content.slice(0, content.length - 1), "\\") % 2 !== 0
 }
 export function removeUselessBackSlashInStr(str: string): string {
     let str2 = ""
@@ -78,7 +84,7 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
             return `${stringify(operators[0], colors)} ${stringComps[comparaison.name][+comparaison.invert]} ${stringify(operators[1], colors)}`
         }
         case "function_asignation": {
-            return `fn ${data.name}( ... )`
+            return `function ${data.name}( ... )`
         }
         case "function_call": {
             return `${data.name}(${data.arguments.map(a => stringify(a, colors)).join(', ')})`
@@ -95,7 +101,7 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
             return colors ? chalk.italic.magentaBright(txt) : txt
         }
         case "number": {
-            const txt  = eToNumber(data.number.toString())
+            const txt  = data.number.toFixed()
             return colors ? chalk.blueBright(txt) : txt
         }
         case "object": {

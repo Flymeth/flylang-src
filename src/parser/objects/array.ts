@@ -45,12 +45,12 @@ export default class Array extends CompilerObject {
         const items = position.split().autoTrim()
 
         const splitted = safeSplit(items, [","])
-        if(!splitted) return new RaiseFlyLangCompilerError(createSplitError(position)).raise()
+        if(!splitted) throw new RaiseFlyLangCompilerError(createSplitError(position)).raise()
         
         const parsedItems: ParsableObjectList[] = []
         for(const value of splitted) {
             const parsed = await FlyLang.parse(this.data, value.autoTrim(), this.restrictedWith  || variableAcceptedObjects(this.data))
-            if(!parsed) return new RaiseFlyLangCompilerError(fastSyntaxError(value, "Invalid item specified.")).raise()
+            if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(value, "Invalid item specified.")).raise()
             parsedItems.push(parsed)
         }
 

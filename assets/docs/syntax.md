@@ -6,9 +6,15 @@ This document will presents you how to write flylang code.
 
 To make a comment (= text that the interpreter will not care about), place your text between two `|` like so:
 
-```fly
+```doc
 |This is a cool comment|
 ...
+```
+
+Or if you want to comment a hole line, place your comment just after the `||` caracters like bellow:
+
+```doc
+6 * 2 || Comment to inform you that 6 * 2 should returns 12
 ```
 
 ## Types
@@ -158,9 +164,22 @@ until(<condition>,
 )
 ```
 
+## Try
+
+If you want to avoid error raising, you can put your code into a `try` statement and handle the error result (if there is any) with a `else` like bellow:
+
+```doc
+try(
+    || We cannot additionate a number with a string
+    std.out(9 + "hello")
+)else (err, || The "err" argument is string (or unset if the err comes from the language code)
+    std.out("An error has come!")
+)
+```
+
 ## Import statement
 
-***!!** This feature is at this point a beta feature. It may not work*
+***!!** This feature is at this point a beta one. It may not work*
 This feature import flylang's code from another file or import a module's features.
 
 ```doc
@@ -192,3 +211,21 @@ sin|Calculate the sine of a number|`number`
 tan|Calculate the tangent of a number|`number`
 factorial|Calculate the factorial of a number (number!)|`number`
 sqrt|Calculate the square root of a positive number|`number` (> 0)
+exp|Calculate the exponential of a number|`number`
+
+#### Process
+
+`import process ...`
+This module countain variables/functions tool related to the os processes
+
+##### Process - Functions
+
+name|description|argument(s)
+---|---|---
+fetch|Fetch a process by its PID|`number`
+
+##### Process - Objects
+
+name|description|attribute(s)
+---|---|---
+current|The current process|`pid`; `ppid`; `name`; `kill()`

@@ -34,7 +34,7 @@ export default class BooleanTest extends CompilerObject {
     async parse(position: Positioner): Promise<BooleanTestReturn | null> {
         const symbols = Object.values(rules.boolean_symbols)
         let separated = separate(position, symbols)
-        if(!separated) return new RaiseFlyLangCompilerError(fastSyntaxError(position)).raise()
+        if(!separated) throw new RaiseFlyLangCompilerError(fastSyntaxError(position)).raise()
 
         if(separated.length === 1) {
             position.autoTrim()

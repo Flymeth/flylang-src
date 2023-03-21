@@ -15,15 +15,15 @@ function splitAndRemoveUselessPriorities(code: string, prioritiesCloser= rules.b
     if(code.startsWith('if')) return [code]
     try {
         const splitted = safeSplit(new Positioner(code), prioritiesCloser, true)
-        if(splitted.length <= 1 && multipleStartsWith(code, rules.block.openner)) return splitAndRemoveUselessPriorities(code.slice(1, -1))
+        if(splitted.length <= 1 && multipleStartsWith(code, rules.block.openner)) return splitAndRemoveUselessPriorities(code.slice(1, -1), prioritiesCloser)
         return splitted.map(e => e.now)
     } catch (_) { return null }
 }
 
 function simplifyPriorities(code: string): string[] | null {
-    const symplifies_end = [...rules.block.closer, ...rules.objects.closer]
-    const symplifies_start= [...rules.block.openner, ...rules.objects.openner]
-    const splitted = splitAndRemoveUselessPriorities(code, symplifies_end)    
+    const symplifies_end = [...rules.block.closer, ...rules.objects.closer, ...rules.string.openner]
+    const symplifies_start= [...rules.block.openner, ...rules.objects.openner, ...rules.string.closer]
+    const splitted = splitAndRemoveUselessPriorities(code, symplifies_end)
     if(!splitted) return null
 
     return splitted.map((value, index) => {
@@ -41,7 +41,10 @@ function simplifyPriorities(code: string): string[] | null {
             const letter = isFunction ? `(${generateLetter(index)})` : generateLetter(index)
             return before + letter
         }
-        
+        else if(multipleStartsWith(value, rules.string.openner) && multipleEndsWith(value, rules.string.closer) && splitted[index +1]) {
+            return generateLetter(index)
+        }
+
         return value
     })
 }

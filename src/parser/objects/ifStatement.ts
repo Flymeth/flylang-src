@@ -58,9 +58,9 @@ export default class ifStatement extends CompilerObject {
             1
         )
         
-        if(!splitted) return new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
+        if(!splitted) throw new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
         const executable = splitted.shift()
-        if(!executable) return new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
+        if(!executable) throw new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
         executable.start+= openner.length
         
         const parser = new FlyLang({

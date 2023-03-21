@@ -2,30 +2,89 @@
   "origin": {
     "file": {
       "path": "C:\\Users\\johan\\OneDrive\\Documents\\.perso\\Dev\\Files\\Compilers\\FlyLang\\tests\\input.fly",
-      "content": "cs Animal(\r\n    || Ceci est le constructeur (__init__ en python)\r\n    fn(type, age, TTL,\r\n        me.data: {\r\n            type: type,\r\n            age: age,\r\n            ttl: TTL\r\n        }\r\n    ),\r\n\r\n    || Renvoie un nombre signifiant le reste d'année a vivre de l'animal\r\n    fn diesIn(\r\n        return me.data.ttl - me.data.age\r\n    )\r\n    || Ajoute 1 à l'age de l'animal\r\n    fn birthday(\r\n        me.data.age+: 1\r\n    )\r\n)\r\n\r\ncs Cat(Animal,\r\n    fn(name,\r\n        Animal(\"cat\", 0, 19)\r\n        me.data.name: name\r\n    ),\r\n\r\n    || Affiche les informations du chat\r\n    fn displayInformations(\r\n        {name, age}: me.data\r\n        timeBeforeDie: me.diesIn()\r\n        std.out(\"The cat &(name) is &(age)yo and will die in &(timeBeforeDie) year(s)\")\r\n    )\r\n)\r\nmyCat: new Cat(\"felix\")\r\nfor(range(5), fn(myCat.birthday()))\r\nmyCat.displayInformations()"
+      "content": "if(true,\r\n    try(\r\n        std.out(\"hello\")\r\n    )else(\r\n        std.out(\"GoodBye!\")\r\n    )\r\n)else(\r\n    std.out(\"If is false!\")\r\n)"
     }
   },
   "content": [
     {
-      "type": "class_constructor",
+      "type": "if_statement",
       "data": {
-        "name": "Animal",
-        "extends": [],
-        "content": {
-          "constructor": {
-            "type": "function_asignation",
+        "type": "if",
+        "condition": {
+          "type": "strict_value",
+          "data": {
+            "value": true
+          },
+          "map": [
+            0,
+            132
+          ]
+        },
+        "code": [
+          {
+            "type": "try_statement",
             "data": {
-              "name": null,
-              "arguments": [
-                "type",
-                "age",
-                "TTL"
-              ],
-              "code": [
+              "try": [
                 {
-                  "type": "variable_asignation",
+                  "type": "attribute_access",
                   "data": {
-                    "variable": {
+                    "origin": {
+                      "fromScript": false,
+                      "object": {
+                        "type": "variable",
+                        "data": {
+                          "name": "std"
+                        },
+                        "map": [
+                          14,
+                          18
+                        ]
+                      }
+                    },
+                    "access": [
+                      {
+                        "fromScript": false,
+                        "object": {
+                          "type": "function_call",
+                          "data": {
+                            "name": "out",
+                            "arguments": [
+                              {
+                                "type": "string",
+                                "data": [
+                                  {
+                                    "type": "text",
+                                    "data": "hello"
+                                  }
+                                ],
+                                "map": [
+                                  22,
+                                  29
+                                ]
+                              }
+                            ]
+                          },
+                          "map": [
+                            18,
+                            30
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "map": [
+                    14,
+                    30
+                  ]
+                }
+              ],
+              "handler": {
+                "type": "function_asignation",
+                "data": {
+                  "name": null,
+                  "arguments": [],
+                  "code": [
+                    {
                       "type": "attribute_access",
                       "data": {
                         "origin": {
@@ -33,11 +92,11 @@
                           "object": {
                             "type": "variable",
                             "data": {
-                              "name": "me"
+                              "name": "std"
                             },
                             "map": [
-                              49,
-                              52
+                              54,
+                              58
                             ]
                           }
                         },
@@ -45,364 +104,101 @@
                           {
                             "fromScript": false,
                             "object": {
-                              "type": "variable",
+                              "type": "function_call",
                               "data": {
-                                "name": "data"
+                                "name": "out",
+                                "arguments": [
+                                  {
+                                    "type": "string",
+                                    "data": [
+                                      {
+                                        "type": "text",
+                                        "data": "GoodBye!"
+                                      }
+                                    ],
+                                    "map": [
+                                      62,
+                                      72
+                                    ]
+                                  }
+                                ]
                               },
                               "map": [
-                                52,
-                                56
+                                58,
+                                73
                               ]
                             }
                           }
                         ]
                       },
                       "map": [
-                        49,
-                        57
-                      ]
-                    },
-                    "constant": false,
-                    "value": {
-                      "type": "object",
-                      "data": {
-                        "values": [
-                          {
-                            "key": "type",
-                            "value": {
-                              "type": "variable",
-                              "data": {
-                                "name": "type"
-                              },
-                              "map": [
-                                78,
-                                84
-                              ]
-                            }
-                          },
-                          {
-                            "key": "age",
-                            "value": {
-                              "type": "variable",
-                              "data": {
-                                "name": "age"
-                              },
-                              "map": [
-                                102,
-                                107
-                              ]
-                            }
-                          },
-                          {
-                            "key": "ttl",
-                            "value": {
-                              "type": "variable",
-                              "data": {
-                                "name": "TTL"
-                              },
-                              "map": [
-                                125,
-                                139
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      "map": [
-                        57,
-                        140
+                        54,
+                        73
                       ]
                     }
-                  },
-                  "map": [
-                    49,
-                    140
                   ]
                 }
-              ]
-            }
-          },
-          "properties": [
+              }
+            },
+            "map": [
+              0,
+              78
+            ]
+          }
+        ],
+        "else": {
+          "type": "else",
+          "code": [
             {
-              "type": "function_asignation",
+              "type": "attribute_access",
               "data": {
-                "name": "diesIn",
-                "arguments": [],
-                "code": [
-                  {
-                    "type": "stopper",
+                "origin": {
+                  "fromScript": false,
+                  "object": {
+                    "type": "variable",
                     "data": {
-                      "type": "fct_returns",
-                      "return": {
-                        "type": "operation",
-                        "data": {
-                          "operation": "substraction",
-                          "operators": [
-                            {
-                              "type": "attribute_access",
-                              "data": {
-                                "origin": {
-                                  "fromScript": false,
-                                  "object": {
-                                    "type": "variable",
-                                    "data": {
-                                      "name": "me"
-                                    },
-                                    "map": [
-                                      189,
-                                      192
-                                    ]
-                                  }
-                                },
-                                "access": [
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "data"
-                                      },
-                                      "map": [
-                                        192,
-                                        197
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "ttl"
-                                      },
-                                      "map": [
-                                        197,
-                                        200
-                                      ]
-                                    }
-                                  }
-                                ]
-                              },
-                              "map": [
-                                189,
-                                201
-                              ]
-                            },
-                            {
-                              "type": "attribute_access",
-                              "data": {
-                                "origin": {
-                                  "fromScript": false,
-                                  "object": {
-                                    "type": "variable",
-                                    "data": {
-                                      "name": "me"
-                                    },
-                                    "map": [
-                                      203,
-                                      206
-                                    ]
-                                  }
-                                },
-                                "access": [
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "data"
-                                      },
-                                      "map": [
-                                        206,
-                                        211
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "age"
-                                      },
-                                      "map": [
-                                        211,
-                                        214
-                                      ]
-                                    }
-                                  }
-                                ]
-                              },
-                              "map": [
-                                202,
-                                214
-                              ]
-                            }
-                          ]
-                        },
-                        "map": [
-                          189,
-                          214
-                        ]
-                      }
+                      "name": "std"
                     },
                     "map": [
-                      182,
-                      214
+                      92,
+                      96
                     ]
                   }
-                ]
-              },
-              "map": [
-                162,
-                221
-              ]
-            },
-            {
-              "type": "function_asignation",
-              "data": {
-                "name": "birthday",
-                "arguments": [],
-                "code": [
+                },
+                "access": [
                   {
-                    "type": "variable_asignation",
-                    "data": {
-                      "variable": {
-                        "type": "attribute_access",
-                        "data": {
-                          "origin": {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "me"
-                              },
-                              "map": [
-                                255,
-                                258
-                              ]
-                            }
-                          },
-                          "access": [
-                            {
-                              "fromScript": false,
-                              "object": {
-                                "type": "variable",
-                                "data": {
-                                  "name": "data"
-                                },
-                                "map": [
-                                  258,
-                                  263
-                                ]
+                    "fromScript": false,
+                    "object": {
+                      "type": "function_call",
+                      "data": {
+                        "name": "out",
+                        "arguments": [
+                          {
+                            "type": "string",
+                            "data": [
+                              {
+                                "type": "text",
+                                "data": "If is false!"
                               }
-                            },
-                            {
-                              "fromScript": false,
-                              "object": {
-                                "type": "variable",
-                                "data": {
-                                  "name": "age"
-                                },
-                                "map": [
-                                  263,
-                                  266
-                                ]
-                              }
-                            }
-                          ]
-                        },
-                        "map": [
-                          255,
-                          268
+                            ],
+                            "map": [
+                              100,
+                              114
+                            ]
+                          }
                         ]
                       },
-                      "constant": false,
-                      "value": {
-                        "type": "operation",
-                        "data": {
-                          "operation": "addition",
-                          "operators": [
-                            {
-                              "type": "attribute_access",
-                              "data": {
-                                "origin": {
-                                  "fromScript": false,
-                                  "object": {
-                                    "type": "variable",
-                                    "data": {
-                                      "name": "me"
-                                    },
-                                    "map": [
-                                      254,
-                                      257
-                                    ]
-                                  }
-                                },
-                                "access": [
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "data"
-                                      },
-                                      "map": [
-                                        257,
-                                        262
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "fromScript": false,
-                                    "object": {
-                                      "type": "variable",
-                                      "data": {
-                                        "name": "age"
-                                      },
-                                      "map": [
-                                        262,
-                                        265
-                                      ]
-                                    }
-                                  }
-                                ]
-                              },
-                              "map": [
-                                254,
-                                265
-                              ]
-                            },
-                            {
-                              "type": "number",
-                              "data": {
-                                "type": "integer",
-                                "negative": false,
-                                "number": "1"
-                              },
-                              "map": [
-                                266,
-                                268
-                              ]
-                            }
-                          ]
-                        },
-                        "map": [
-                          254,
-                          268
-                        ]
-                      }
-                    },
-                    "map": [
-                      255,
-                      270
-                    ]
+                      "map": [
+                        96,
+                        115
+                      ]
+                    }
                   }
                 ]
               },
               "map": [
-                233,
-                277
+                92,
+                115
               ]
             }
           ]
@@ -410,574 +206,7 @@
       },
       "map": [
         0,
-        428
-      ]
-    },
-    {
-      "type": "class_constructor",
-      "data": {
-        "name": "Cat",
-        "extends": [
-          "Animal"
-        ],
-        "content": {
-          "constructor": {
-            "type": "function_asignation",
-            "data": {
-              "name": null,
-              "arguments": [
-                "name"
-              ],
-              "code": [
-                {
-                  "type": "function_call",
-                  "data": {
-                    "name": "Animal",
-                    "arguments": [
-                      {
-                        "type": "string",
-                        "data": [
-                          {
-                            "type": "text",
-                            "data": "cat"
-                          }
-                        ],
-                        "map": [
-                          476,
-                          482
-                        ]
-                      },
-                      {
-                        "type": "number",
-                        "data": {
-                          "type": "integer",
-                          "negative": false,
-                          "number": "0"
-                        },
-                        "map": [
-                          482,
-                          485
-                        ]
-                      },
-                      {
-                        "type": "number",
-                        "data": {
-                          "type": "integer",
-                          "negative": false,
-                          "number": "19"
-                        },
-                        "map": [
-                          485,
-                          488
-                        ]
-                      }
-                    ]
-                  },
-                  "map": [
-                    469,
-                    489
-                  ]
-                },
-                {
-                  "type": "variable_asignation",
-                  "data": {
-                    "variable": {
-                      "type": "attribute_access",
-                      "data": {
-                        "origin": {
-                          "fromScript": false,
-                          "object": {
-                            "type": "variable",
-                            "data": {
-                              "name": "me"
-                            },
-                            "map": [
-                              499,
-                              502
-                            ]
-                          }
-                        },
-                        "access": [
-                          {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "data"
-                              },
-                              "map": [
-                                502,
-                                507
-                              ]
-                            }
-                          },
-                          {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "name"
-                              },
-                              "map": [
-                                507,
-                                511
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      "map": [
-                        499,
-                        512
-                      ]
-                    },
-                    "constant": false,
-                    "value": {
-                      "type": "variable",
-                      "data": {
-                        "name": "name"
-                      },
-                      "map": [
-                        512,
-                        517
-                      ]
-                    }
-                  },
-                  "map": [
-                    499,
-                    517
-                  ]
-                }
-              ]
-            }
-          },
-          "properties": [
-            {
-              "type": "function_asignation",
-              "data": {
-                "name": "displayInformations",
-                "arguments": [],
-                "code": [
-                  {
-                    "type": "variable_asignation",
-                    "data": {
-                      "variable": {
-                        "type": "array",
-                        "data": {
-                          "values": [
-                            {
-                              "type": "variable",
-                              "data": {
-                                "name": "name"
-                              },
-                              "map": [
-                                573,
-                                578
-                              ]
-                            },
-                            {
-                              "type": "variable",
-                              "data": {
-                                "name": "age"
-                              },
-                              "map": [
-                                578,
-                                582
-                              ]
-                            }
-                          ]
-                        },
-                        "map": [
-                          572,
-                          584
-                        ]
-                      },
-                      "constant": false,
-                      "value": {
-                        "type": "attribute_access",
-                        "data": {
-                          "origin": {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "me"
-                              },
-                              "map": [
-                                585,
-                                588
-                              ]
-                            }
-                          },
-                          "access": [
-                            {
-                              "fromScript": false,
-                              "object": {
-                                "type": "variable",
-                                "data": {
-                                  "name": "data"
-                                },
-                                "map": [
-                                  588,
-                                  592
-                                ]
-                              }
-                            }
-                          ]
-                        },
-                        "map": [
-                          584,
-                          592
-                        ]
-                      }
-                    },
-                    "map": [
-                      572,
-                      592
-                    ]
-                  },
-                  {
-                    "type": "variable_asignation",
-                    "data": {
-                      "variable": {
-                        "type": "variable",
-                        "data": {
-                          "name": "timeBeforeDie"
-                        },
-                        "map": [
-                          602,
-                          616
-                        ]
-                      },
-                      "constant": false,
-                      "value": {
-                        "type": "attribute_access",
-                        "data": {
-                          "origin": {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "me"
-                              },
-                              "map": [
-                                617,
-                                620
-                              ]
-                            }
-                          },
-                          "access": [
-                            {
-                              "fromScript": false,
-                              "object": {
-                                "type": "function_call",
-                                "data": {
-                                  "name": "diesIn",
-                                  "arguments": []
-                                },
-                                "map": [
-                                  620,
-                                  628
-                                ]
-                              }
-                            }
-                          ]
-                        },
-                        "map": [
-                          616,
-                          628
-                        ]
-                      }
-                    },
-                    "map": [
-                      602,
-                      628
-                    ]
-                  },
-                  {
-                    "type": "attribute_access",
-                    "data": {
-                      "origin": {
-                        "fromScript": false,
-                        "object": {
-                          "type": "variable",
-                          "data": {
-                            "name": "std"
-                          },
-                          "map": [
-                            638,
-                            642
-                          ]
-                        }
-                      },
-                      "access": [
-                        {
-                          "fromScript": false,
-                          "object": {
-                            "type": "function_call",
-                            "data": {
-                              "name": "out",
-                              "arguments": [
-                                {
-                                  "type": "string",
-                                  "data": [
-                                    {
-                                      "type": "text",
-                                      "data": "The cat "
-                                    },
-                                    {
-                                      "type": "data",
-                                      "data": {
-                                        "type": "variable",
-                                        "data": {
-                                          "name": "name"
-                                        },
-                                        "map": [
-                                          657,
-                                          661
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "type": "text",
-                                      "data": " is "
-                                    },
-                                    {
-                                      "type": "data",
-                                      "data": {
-                                        "type": "variable",
-                                        "data": {
-                                          "name": "age"
-                                        },
-                                        "map": [
-                                          668,
-                                          671
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "type": "text",
-                                      "data": "yo and will die in "
-                                    },
-                                    {
-                                      "type": "data",
-                                      "data": {
-                                        "type": "variable",
-                                        "data": {
-                                          "name": "timeBeforeDie"
-                                        },
-                                        "map": [
-                                          693,
-                                          706
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "type": "text",
-                                      "data": " year(s)"
-                                    }
-                                  ],
-                                  "map": [
-                                    646,
-                                    716
-                                  ]
-                                }
-                              ]
-                            },
-                            "map": [
-                              642,
-                              717
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "map": [
-                      638,
-                      717
-                    ]
-                  }
-                ]
-              },
-              "map": [
-                539,
-                724
-              ]
-            }
-          ]
-        }
-      },
-      "map": [
-        432,
-        763
-      ]
-    },
-    {
-      "type": "variable_asignation",
-      "data": {
-        "variable": {
-          "type": "variable",
-          "data": {
-            "name": "myCat"
-          },
-          "map": [
-            765,
-            771
-          ]
-        },
-        "constant": false,
-        "value": {
-          "type": "class_instanciation",
-          "data": {
-            "name": "Cat",
-            "parameters": [
-              {
-                "type": "string",
-                "data": [
-                  {
-                    "type": "text",
-                    "data": "felix"
-                  }
-                ],
-                "map": [
-                  780,
-                  787
-                ]
-              }
-            ]
-          },
-          "map": [
-            771,
-            788
-          ]
-        }
-      },
-      "map": [
-        765,
-        788
-      ]
-    },
-    {
-      "type": "loop",
-      "data": {
-        "type": "for",
-        "iterator": {
-          "type": "function_call",
-          "data": {
-            "name": "range",
-            "arguments": [
-              {
-                "type": "number",
-                "data": {
-                  "type": "integer",
-                  "negative": false,
-                  "number": "5"
-                },
-                "map": [
-                  800,
-                  801
-                ]
-              }
-            ]
-          },
-          "map": [
-            794,
-            803
-          ]
-        },
-        "executor": {
-          "type": "function_asignation",
-          "data": {
-            "name": null,
-            "arguments": [],
-            "code": [
-              {
-                "type": "attribute_access",
-                "data": {
-                  "origin": {
-                    "fromScript": false,
-                    "object": {
-                      "type": "variable",
-                      "data": {
-                        "name": "myCat"
-                      },
-                      "map": [
-                        807,
-                        813
-                      ]
-                    }
-                  },
-                  "access": [
-                    {
-                      "fromScript": false,
-                      "object": {
-                        "type": "function_call",
-                        "data": {
-                          "name": "birthday",
-                          "arguments": []
-                        },
-                        "map": [
-                          813,
-                          823
-                        ]
-                      }
-                    }
-                  ]
-                },
-                "map": [
-                  807,
-                  823
-                ]
-              }
-            ]
-          },
-          "map": [
-            803,
-            824
-          ]
-        }
-      },
-      "map": [
-        790,
-        825
-      ]
-    },
-    {
-      "type": "attribute_access",
-      "data": {
-        "origin": {
-          "fromScript": false,
-          "object": {
-            "type": "variable",
-            "data": {
-              "name": "myCat"
-            },
-            "map": [
-              827,
-              833
-            ]
-          }
-        },
-        "access": [
-          {
-            "fromScript": false,
-            "object": {
-              "type": "function_call",
-              "data": {
-                "name": "displayInformations",
-                "arguments": []
-              },
-              "map": [
-                833,
-                854
-              ]
-            }
-          }
-        ]
-      },
-      "map": [
-        827,
-        854
+        132
       ]
     }
   ]

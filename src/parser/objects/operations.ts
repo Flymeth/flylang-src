@@ -86,7 +86,7 @@ export default class Operation extends CompilerObject {
             }
         }, operations)
         
-        if(!parsed) return new RaiseFlyLangCompilerError(fastSyntaxError(code, "Invalid operation.")).raise()
+        if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Invalid operation.")).raise()
         return parsed
     }
 }

@@ -3,7 +3,7 @@ import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import { multipleEndsWith, multipleStartsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { numberOfCharEnding } from "../../interpreter/stringify.js";
+import { considerAsAChar, numberOfCharEnding } from "../../interpreter/stringify.js";
 
 export function createSplitError(position: Positioner) {
     return fastSyntaxError(position, `Unclosed block.`)
@@ -38,7 +38,7 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
     if(!position.now) return []
     const splitted: Positioner[] = []
     
-    const {objects, string, block, comments} = rules
+    const {objects, string, block, comments, string_data} = rules
     maxSplits??= Infinity
 
     function isIfElseStatement(): boolean {
@@ -68,10 +68,18 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
             const content = position.now
             
             if(deep.object && !deep.string && !deep.comment && multipleEndsWith(content, objects.closer)) deep.object--
-            else if(deep.string && !deep.comment && deep.cache.str_char === multipleEndsWith(content, string.closer) && numberOfCharEnding(content.slice(0, content.length - 1), "\\") % 2 === 0) deep.string--, delete deep.cache.str_char
+            else if(deep.string && !deep.comment && deep.cache.str_char === multipleEndsWith(content, string.closer) && !considerAsAChar(content)) deep.string--, delete deep.cache.str_char
             else if(deep.block && !deep.string && !deep.comment && multipleEndsWith(content, block.closer)) deep.block--
             else if(deep.comment && !deep.string && multipleEndsWith(content, comments.closer)) deep.comment--
             
+            else if(!deep.comment && deep.string && multipleEndsWith(content, [string_data.openner]) && !considerAsAChar(content)) { // String's data
+                const clonedCurrentPosition = position.clone()
+                clonedCurrentPosition.start = clonedCurrentPosition.end - 1 // Remove the 1st symbole of the oppener
+                clonedCurrentPosition.end = clonedCurrentPosition.global.length
+                const fromOpennerToCloser = safeSplit(clonedCurrentPosition.split(), [string_data.closer], true, 1)[0]
+                position.end+= fromOpennerToCloser.end -1 // Remove the 2nd symbol of the openner
+
+            }
             else if(!(deep.string || deep.comment)) {
                 if(!ignore?.comment && multipleEndsWith(content, comments.openner)) deep.comment++
                 else if(!ignore?.block && multipleEndsWith(content, block.openner)) deep.block++

@@ -4,15 +4,17 @@ import Interpreter from "../interpreter";
 import RaiseFlyLangCompilerError from "../../errors/raiseError";
 import OperationError from "../../errors/interpreter/operationError";
 import { NumberReturn } from "../../parser/objects/number";
+import { ParsableObjectList } from "../../parser/parser";
 
 const pi = new BigNumber("3.1415926535897932384626433832795028841971693993751")
+const e = new BigNumber("2.71828182845904523536028747135266249775724709369995")
 const [halfPI, twoPI] = [pi.dividedBy(2), pi.multipliedBy(2)]
-const nToFactorialOf2n = new Array(25).fill(null).map((_, n) => {
+const nToFactorialOf2n = new Array(30).fill(null).map((_, n) => {
     const twoN = new BigNumber(2 * (n + 1)) // (n + 1) because we start at 2 (and not 0)
     const fact = factorial(twoN)
     return {twoN, fact}
 })
-const knownCosValues: Map<string, BigNumber>= new Map()
+const knownCosValues: Map<string, BigNumber> = new Map()
 knownCosValues.set("0", new BigNumber(1))
 knownCosValues.set(halfPI.toFixed(), new BigNumber(0))
 knownCosValues.set(pi.toFixed(), new BigNumber(-1))
@@ -30,6 +32,7 @@ function factorial(x: BigNumber): BigNumber {
 */
 function TaylorCosCalculation(x: BigNumber): BigNumber {
     x= x.modulo(twoPI)
+    if(x.isLessThan(0)) x= x.plus(twoPI)
     let res = knownCosValues.get(x.toFixed())
 
     if(!res) {
@@ -50,6 +53,9 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
         variables: {
             pi: async () => (
                 {type: "number", data: {negative: false, type: "float", number: pi}}
+            ),
+            e: async () => (
+                {type: "number", data: {negative: false, type: "float", number: e}}
             )
         },
         functions: {
@@ -92,6 +98,19 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
                 if(nb.type !== "number" || nb.data.number.isNaN() || nb.data.number.isLessThan(0)) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Square root can only be calculated with a positive number.")).raise()
                 const res = nb.data.number.sqrt()
                 return {type: "number", data: {negative: false, number: res, type: res.isInteger() ? "integer" : "float"}}
+            },
+            async pow(pow, by, ..._) {
+                pow = await intrp.eval(pow)
+                by = await intrp.eval(by)
+                if (
+                    pow.type !== "number" || pow.data.number.isNaN()
+                    || by.type !== "number" || by.data.number.isNaN()
+                ) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Pow can only be calculated with a number, by a number.")).raise()
+                const res = pow.data.number.pow(by.data.number)
+                return {type: "number", data: {negative: res.isNegative(), number: res, type: res.isInteger() ? "integer" : "float"}}
+            },
+            async exp(powedBy, ..._) {
+                return module.functions.pow(await module.variables.e(), powedBy)
             }
         },
         objects: {}

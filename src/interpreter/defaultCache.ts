@@ -1,7 +1,6 @@
 import { inspect } from "util";
 import FunctionError from "../errors/interpreter/functionError";
 import RaiseFlyLangCompilerError from "../errors/raiseError";
-import eToNumber from "../lib/eToNumber";
 import { ArrayReturn } from "../parser/objects/array";
 import { AttrAccessReturn } from "../parser/objects/attr_access";
 import { ClassConstrReturn } from "../parser/objects/class_construct";
@@ -13,6 +12,7 @@ import Parser, { ParsableObjectList } from "../parser/parser";
 import Interpreter, { UNDEFINED_TYPE } from "./interpreter";
 import {BigNumber} from "bignumber.js";
 import stringify, { createStringObj } from "./stringify";
+import { join } from "path";
 
 export type methodObject<obj extends ParsableObjectList["data"]> = {
     variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
@@ -26,12 +26,12 @@ export type cacheInterface = {
          */
         variables: {[key: string]: {editable: boolean, value: ParsableObjectList, default?: ParsableObjectList}},
         functions: {[key: string]: FunctionAsignationReturn["data"]},
-        objects: {[key: string]: {data: cacheInterface["registered"], class?: ClassConstrReturn["data"]}}
+        objects: {[key: string]: {data: cacheInterface["registered"], class: ClassConstrReturn["data"], id: number}}
     },
     builtin: {
         variables: {[key: string]: () => Promise<ParsableObjectList>},
         functions: {[key: string]: (...args: ParsableObjectList[]) => Promise<ParsableObjectList>},
-        objects: {[key: string]: {data: cacheInterface["builtin"]}}
+        objects: {[key: string]: {data: cacheInterface["builtin"], id: number}}
     },
     methods: {
         "string": methodObject<StringReturn["data"]>,
@@ -55,18 +55,22 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
         },
         builtin: {
             variables: {
-                async __cwd() {
-                    const path = interpMethods.currentPosition.file?.value || "<unknow>"
+                async __path() {
+                    const path = interpMethods.currentPosition.file?.value || join(process.cwd(), "console.fly")
+                    if(!path) return UNDEFINED_TYPE
                     return createStringObj(path)
                 },
                 async __main() {
-                    const path = interpMethods.currentPosition.original.file?.value || "<unknow>"
+                    const path = interpMethods.currentPosition.original.file?.value
+                    if(!path) return UNDEFINED_TYPE
                     return createStringObj(path)
                 },
                 async debug() {
-                    const depth= 5
-                    interpMethods.print(`# REGISTERED:\n${inspect(interpMethods.cache.registered, false, depth)}\n# BUILTIN:\n${inspect(interpMethods.cache.builtin, false, depth)}`)
-                    await interpMethods.input("[DEBUGGER CALLED]>> Press Enter To Continue.\n")
+                    const depthRegistered= 10
+                    const depthBuiltIn= 5
+                    interpMethods.print(`# REGISTERED:\n${inspect(interpMethods.cache.registered, false, depthRegistered)}\n# BUILTIN:\n${inspect(interpMethods.cache.builtin, false, depthBuiltIn)}`)
+                    await interpMethods.input("[DEBUGGER CALLED]>> Press Enter To Continue. -> ")
+                    interpMethods.consoleModeCache.blockNextPrint = true
                     return UNDEFINED_TYPE
                 }
             },
@@ -94,19 +98,20 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range arguments must be of type number.")).raise()
 
                     let [from, to, step] = [fromObj.data.number, toObj?.data.number, stepObj?.data.number]
-                    if(typeof to !== "number") [from, to] = [new BigNumber(0), from]
-                    if(typeof step !== "number") step = from < to ? new BigNumber(1) : new BigNumber(-1)
+                    if(!to) [from, to] = [new BigNumber(0), from]
+                    if(!step) step = from.isLessThan(to) ? new BigNumber(1) : new BigNumber(-1)
                     if(
                         step.isEqualTo(0)
-                        || step.isLessThan(0) && from < to
-                        || step.isGreaterThan(0) && from > to
+                        || step.isLessThan(0) && from.isLessThan(to)
+                        || step.isGreaterThan(0) && from.isGreaterThan(to)
                     ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Step can't be egual to 0. If the initial value is greater than the ending value, step must be lower than 0, and reversly.")).raise()
 
                     const finalLen = to.minus(from).abs()
                     if(finalLen.isGreaterThan(parseInt(interpMethods.data.properties.getValue("maxObjectsSize")?.value || "0"))) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "The output array length will be above the limit.")).raise()
 
                     const array: NumberReturn[] = []
-                    for(let i = from; (step.isLessThan(0) ? i > to : i < to); i= i.plus(step)) array.push({type: "number", data: {number: i, negative: i.isNegative(), type: i.isInteger() ? "integer" : "float"}})
+                    const checkerIsGreaterThan = step.isLessThan(0)
+                    for(let i = from; ( checkerIsGreaterThan ? i.isGreaterThan(to) : i.isLessThan(to)); i= i.plus(step)) array.push({type: "number", data: {number: i, negative: i.isNegative(), type: i.isInteger() ? "integer" : "float"}})
                     return {type: "array", data: {values: array}}
                 },
                 async typeof(obj, ..._) {
@@ -126,6 +131,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
             },
             objects: {
                 std: {
+                    id: 0,
                     data: {
                         variables: {},
                         functions: {
@@ -141,6 +147,10 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                             },
                             async cls(..._) {
                                 interpMethods.clear()
+                                return UNDEFINED_TYPE
+                            },
+                            async exit(..._) {
+                                process.kill(process.pid)
                                 return UNDEFINED_TYPE
                             }
                         },
@@ -199,7 +209,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                 },
                 functions: {
                     async asStr(nb, ..._) {
-                        return {type: "string", data: [{type: "text", data: eToNumber(nb.number.toString())}]}
+                        return {type: "string", data: [{type: "text", data: nb.number.toFixed()}]}
                     },
                 }
             },

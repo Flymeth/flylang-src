@@ -1,36 +1,3 @@
-cs Animal(
-    || Ceci est le constructeur (__init__ en python)
-    fn(type, age, TTL,
-        me.data: {
-            type: type,
-            age: age,
-            ttl: TTL
-        }
-    ),
-
-    || Renvoie un nombre signifiant le reste d'année a vivre de l'animal
-    fn diesIn(
-        return me.data.ttl - me.data.age
-    )
-    || Ajoute 1 à l'age de l'animal
-    fn birthday(
-        me.data.age+: 1
-    )
+while(1,
+    std.out("hello")
 )
-
-cs Cat(Animal,
-    fn(name,
-        Animal("cat", 0, 19)
-        me.data.name: name
-    ),
-
-    || Affiche les informations du chat
-    fn displayInformations(
-        {name, age}: me.data
-        timeBeforeDie: me.diesIn()
-        std.out("The cat &(name) is &(age)yo and will die in &(timeBeforeDie) year(s)")
-    )
-)
-myCat: new Cat("felix")
-for(range(5), fn(myCat.birthday()))
-myCat.displayInformations()

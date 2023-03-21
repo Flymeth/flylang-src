@@ -1,4 +1,4 @@
-import Parser, { ParsableObjectList, ParsedObject, ParserClassData } from "../parser.js";
+import Parser, { ParsedObject, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import Positioner from "../../utils/positioner.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
@@ -23,6 +23,8 @@ export default class String extends CompilerObject {
             fast: new RegExp(`([${string.openner.join("")}]).*\\1`, 's'),
             detailed: new RegExp(`(?<char>[${string.openner.join("")}])(?<content>.*)\\k<char>`, 's')
         })
+        
+        this.bonus_score+= 2
     }
     
     private endingWithCharSkip(str: string): boolean {

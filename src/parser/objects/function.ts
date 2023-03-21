@@ -35,7 +35,7 @@ export default class FunctionCall extends CompilerObject {
 
         const argsPosition = code.take(args)
         const splitedArgs = safeSplit(argsPosition.split(), [","], false, undefined)
-        if(!splitedArgs) return new RaiseFlyLangCompilerError(createSplitError(argsPosition)).raise()
+        if(!splitedArgs) throw new RaiseFlyLangCompilerError(createSplitError(argsPosition)).raise()
         
         const parsedArgs= await Promise.all(
             splitedArgs.map(async value => {

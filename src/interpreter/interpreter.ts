@@ -3,7 +3,7 @@ import asignationError from "../errors/interpreter/asignationError.js"
 import FunctionError from "../errors/interpreter/functionError.js"
 import OperationError from "../errors/interpreter/operationError.js"
 import VariableError from "../errors/interpreter/variableError.js"
-import RaiseFlyLangCompilerError from "../errors/raiseError.js"
+import RaiseFlyLangCompilerError, { setAllowErrors } from "../errors/raiseError.js"
 import { ArrayReturn } from "../parser/objects/array.js"
 import { ClassConstrReturn } from "../parser/objects/class_construct.js"
 import { FunctionAsignationReturn } from "../parser/objects/function_asignation.js"
@@ -14,7 +14,7 @@ import { StringReturn } from "../parser/objects/string.js"
 import { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
 import Positioner from "../utils/positioner.js"
 import {Interface, createInterface} from "readline"
-import stringify from "./stringify.js"
+import stringify, { createStringObj } from "./stringify.js"
 import AccessError from "../errors/interpreter/accessError.js"
 import ExecutionError from "../errors/interpreter/executionError.js"
 import { VariableAsignationReturn } from "../parser/objects/variable_asignation.js"
@@ -23,9 +23,12 @@ import importError from "../errors/interpreter/importError.js"
 import genDefaultCache, { cacheInterface } from "./defaultCache.js"
 import InstanciationError from "../errors/interpreter/instanciationError.js"
 import {BigNumber} from "bignumber.js";
-import { inspect } from "util"
 import { join, parse } from "path"
 import { needParseBeforeInterpretName } from "../utils/registeries.js"
+import safeSplit from "../utils/tools/safeSplit.js"
+import stripAnsi from "strip-ansi"
+import { inspect } from "util"
+import chalk from "chalk";
 
 export const UNDEFINED_TYPE: StrictValueReturn = {type: "strict_value", data: {value: null}}
 let inConsoleMode = false
@@ -59,7 +62,7 @@ export default class Interpreter {
         return v
     }
     async print(data: string) {
-        if(this.consoleModeCache.blockNextPrint) return this.consoleModeCache.blockNextPrint= false
+        if(this.consoleModeCache.blockNextPrint) return this.consoleModeCache.blockNextPrint= false        
         process.stdout.write(data + "\n")
     }
     async clear() {
@@ -92,21 +95,31 @@ export default class Interpreter {
     }
 
     async genVariableValue(editable: boolean, value: ParsableObjectList = UNDEFINED_TYPE): Promise<cacheInterface["registered"]["variables"][string]> {
-        value= needParseBeforeInterpretName.includes(value.type) ? await this.cache.builtin.functions.clone(value) : await this.eval(value)
+        if(needParseBeforeInterpretName.includes(value.type)) value = await this.eval(value)
+
         return {
             editable,
             value,
         }
     }
 
-    private async instanciateClass(cls: ClassConstrReturn["data"], parameters: ParsableObjectList[], instanceName: string): Promise<cacheInterface["registered"]> {
+    private async instanciateClass(cls: ClassConstrReturn["data"], parameters: ParsableObjectList[], forceInstanceName?: string): Promise<string> {
+        let instanceName = forceInstanceName
+        if(!instanceName) {
+            const className = `//instance_${cls.name}`
+            const instanceID = Object.keys(this.cache.registered.objects).filter(n => n.startsWith(className)).length
+            instanceName = `${className}_${instanceID}`
+        }
+        //?                                                                       /-> Because `instanceName` has obligatory a number at the end.
+        const instanceID = parseInt(/(?<id>\d*)$/.exec(instanceName)?.groups?.id as string)
+
         const classCache: cacheInterface["registered"]["objects"][string]["data"] = this.cache.registered.objects[instanceName]?.data || {variables: {}, functions: {}, objects: {}}
         /**
          * If true: this instanciate a extend from another class
          * If false: this is a real class instancier
          */
-        const isAnExtender = !!this.cache.registered.objects[instanceName]        
-        this.cache.registered.objects[instanceName] = {data: classCache, class: cls}
+        const isAnExtender = !!this.cache.registered.objects[instanceName]
+        this.cache.registered.objects[instanceName] = {data: classCache, class: cls, id: instanceID}
 
         if(cls.content) {
             const {constructor, properties} = cls.content
@@ -136,7 +149,7 @@ export default class Interpreter {
                         extended.push(extender.data.name)
                         return {type: "variable", data: {name: "me"}}
                     }
-                }
+                }else throw new RaiseFlyLangCompilerError(new ExecutionError(this.currentPosition, `${name} has already been declared as a function.`)).raise()
             }
 
             this.cache.registered.variables["me"] = {editable: false, value: {type: "variable", data: {name: instanceName}}}
@@ -148,7 +161,7 @@ export default class Interpreter {
                 for(const name of extended) delete this.cache.builtin.functions[name]
             }
         }
-        return classCache
+        return instanceName
     }
     private convertToBoolean(element?: ParsedObject): boolean {
         if(!element) return false
@@ -235,8 +248,9 @@ export default class Interpreter {
             case "class_instanciation": {
                 const variable = await this.eval({type: "variable", data: {name: data.name}})
                 if(variable.type !== "class_constructor") throw new RaiseFlyLangCompilerError(new VariableError(this.currentPosition, `"${data.name}" has not been declared as a class.`)).raise()
-                const instances = Object.keys(this.cache.registered.objects).length
-                const className = `//instance_${data.name}_${instances}`
+                const instanceName = `//instance_${data.name}`
+                const instances = Object.keys(this.cache.registered.objects).filter(n => n.startsWith(instanceName)).length
+                const className = `${instanceName}_${instances}`
 
                 await this.instanciateClass(variable.data, data.parameters, className)
                 return {type: "variable", data: {name: className}}
@@ -246,7 +260,6 @@ export default class Interpreter {
 
                 if(variable.type === "variable") {
                     if(this.cache.registered.variables[variable.data.name]?.editable === false) throw new RaiseFlyLangCompilerError(new asignationError(this.currentPosition, "Variable has been set as a constant.")).raise()
-                    
                     this.cache.registered.variables[variable.data.name] = await this.genVariableValue(!constant, value || undefined)
                 }else if(variable.type === "array" && value) {
                     const asignationValues = variable.data.values
@@ -435,7 +448,7 @@ export default class Interpreter {
                             }
                             case "number": {
                                 const nb1 = operations.first.data.number
-                                const nb2 = (operations.second as NumberReturn).data.number
+                                const nb2 = (operations.second as NumberReturn).data.number                                
                                 const res = nb1.plus(nb2)
                                 
                                 return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
@@ -527,7 +540,7 @@ export default class Interpreter {
                 const classes = {
                     ...this.cache.registered.objects,
                     ...this.cache.builtin.objects
-                }                
+                }
 
                 let returnsValue: ParsableObjectList | undefined = undefined;
                 if(originValue.type === "array" && accessValue.type === "number") { // Access to an array' item
@@ -549,16 +562,21 @@ export default class Interpreter {
                         if(returnsValue.type !== "function_asignation") throw new RaiseFlyLangCompilerError(new FunctionError(this.currentPosition, `"${keyName}" is not a function!`)).raise()
                         returnsValue = await this.evalFunction(returnsValue.data, accessValue.data.arguments) || UNDEFINED_TYPE
                     }
-                } else if((litteralValue.type === "variable" && (litteralValue.data.name in classes)) || (originValue.type === "variable" && (originValue.data.name in classes))) { // Access to a class method/property
+                } else if(
+                    litteralValue.type === "variable" && (litteralValue.data.name in classes)
+                    || originValue.type === "variable" && (originValue.data.name in classes)
+                ) { // Access to a class method/property
                     const thenSetMeAs: cacheInterface["registered"]["variables"][string] | undefined = this.cache.registered.variables.me
+                    const className = originValue.type === "variable" ? originValue.data.name : (litteralValue as VariableReturn).data.name
+                    //?                                                                         \\ This has been tested above //
+                    
                     const isRegisteredClass = originValue.type === "variable" && originValue.data.name.startsWith('//instance')
-                    const classMethods = classes[(isRegisteredClass ? originValue.data.name : (litteralValue as VariableReturn).data.name)]
-                    //?                                                                       \\ This has been tested above //
+                    const classMethods = classes[className]
                     
                     if(isRegisteredClass) this.cache.registered.variables.me = {editable: false, value: originValue}
                     if(accessValue.type === "variable") {
-                        const {variables, functions} = classMethods.data
-                        
+                        const {variables, functions, objects} = classMethods.data
+
                         if(accessValue.data.name in variables) {
                             const v = variables[accessValue.data.name]
                             if(typeof v === "function") returnsValue = await v()
@@ -566,12 +584,25 @@ export default class Interpreter {
                         }else if(accessValue.data.name in functions) {
                             const v = functions[accessValue.data.name]
                             if(typeof v === "function") {
-                                this.cache.builtin.functions[`//builtin_${accessValue.data.name}`] = v
-                                returnsValue = await this.eval({type: "variable", data: {name: `//builtin_${accessValue.data.name}`}})
+                                const fctName = `//builtin_${accessValue.data.name}`
+                                this.cache.builtin.functions[`${fctName}`] = v
+                                returnsValue = await this.eval({type: "variable", data: {name: `${fctName}`}})
                             }else returnsValue = {type: "function_asignation", data: v}
+                        }else if(accessValue.data.name in objects) {
+                            const v = objects[accessValue.data.name]
+                            const isRegisteredInstance = "class" in v
+                            const cacheMemory = isRegisteredInstance ? this.cache.registered : this.cache.builtin
+                            
+                            const className = `//${isRegisteredInstance ? "instance" : "builtin"}_${accessValue.data.name}`
+                            const InstanceName = Object.keys(cacheMemory.objects).filter(n => n.startsWith(className)).find(name => cacheMemory.objects[name].id === v.id) || `${className}_${v.id}`
+                            if(!InstanceName) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, "Cannot access to this object.")).raise()
+
+                            cacheMemory.objects[InstanceName] = v
+                            returnsValue = {type: "variable", data: {name: InstanceName}}
                         }
                     }else if(accessValue.type === "function_call") {
                         const {functions} = classMethods.data
+
                         if(accessValue.data.name in functions) {
                             const v = functions[accessValue.data.name]
                             if(typeof v === "function") returnsValue = await v(...accessValue.data.arguments) || UNDEFINED_TYPE
@@ -606,7 +637,7 @@ export default class Interpreter {
 
                 if(!returnsValue) throw new RaiseFlyLangCompilerError(new AccessError(this.currentPosition, `Invalid attribute/method for type "${originValue.type}".`)).raise()
                 if(access.length - 1) returnsValue = await this.eval({type: "attribute_access", data: {origin: {fromScript: false, object: returnsValue}, access: access.slice(1)}})
-                if(returnsValue.type === "variable") returnsValue = await this.eval(returnsValue)
+                if(returnsValue.type === "variable" && !returnsValue.data.name.startsWith('//builtin')) returnsValue = await this.eval(returnsValue)
                 if(deleteAttrCache) delete this.cache.workingAttrAccess
                 return returnsValue
             }
@@ -672,11 +703,10 @@ export default class Interpreter {
             case "if_statement": {
                 if(data.type === "if") {
                     const {code, condition, else: ifNot} = data
-                    if(this.convertToBoolean(await this.eval(condition))) return await this.process(code, false) || UNDEFINED_TYPE
+                    if(this.convertToBoolean(await this.eval(condition))) return await this.process(code, true, true) || UNDEFINED_TYPE
                     else if(ifNot) return await this.eval({type: "if_statement", data: ifNot})
-
-                }else return await this.process(data.code, false) || UNDEFINED_TYPE
-
+                }else return await this.process(data.code, true, true) || UNDEFINED_TYPE
+                
                 return UNDEFINED_TYPE
             }
             case "class_constructor": {
@@ -737,15 +767,15 @@ export default class Interpreter {
                     }
 
                     return needToBeReturn
-                }else {
+                }else { //? Import a builtin module
                     const modFilePath = join(__dirname, './modules/', `${data.name}.js`)
                     try {
-                        var moduleFct: ((intr: Interpreter) => cacheInterface["builtin"]) | undefined = require(modFilePath)?.default
+                        var moduleFct: ((intr: Interpreter) => Promise<cacheInterface["builtin"]>) | undefined = require(modFilePath)?.default
                         if(!moduleFct) throw 1
                     } catch (_) {
                         throw new RaiseFlyLangCompilerError(new importError(this.currentPosition, `Module ${data.name} has not been found.`)).raise()
                     }
-                    const module = moduleFct(this)                    
+                    const module = await moduleFct(this)                    
                     const {affectedTo, restrictions} = informations
 
                     if(restrictions) {
@@ -779,10 +809,34 @@ export default class Interpreter {
 
                 break;
             }
+            case "try_statement": {
+                const {try: tryCode, handler} = data
+                setAllowErrors(false)
+                try {
+                    await this.process(tryCode, false, true)
+                } catch (err) {
+                    if(handler) {
+                        await this.evalFunction(handler.data, handler.data.arguments?.length ? [
+                            err ? createStringObj(stripAnsi(`${err}`)) : UNDEFINED_TYPE
+                        ] : [])
+
+                    }
+                }
+                setAllowErrors(true)
+                break;
+            }
             case "number": {
                 // After a JSON.parse(JSON.stringify), the number instance is parsed in a string representation of the number
                 if(!(data.number instanceof BigNumber)) data.number = new BigNumber(data.number)
                 break;
+            }
+            case "array": {
+                for await(const value of data.values) await this.eval(value)
+                break
+            }
+            case "object": {
+                for await(const {value} of data.values) await this.eval(value)
+                break
             }
             case "comment": {
                 return UNDEFINED_TYPE
@@ -792,13 +846,13 @@ export default class Interpreter {
     }
 
     /**
-     * Execute in order a lisst of instruction
+     * Execute in order a list of instruction
      * @param instructions An array of instruction to execute
-     * @param allowNotStopperResult If the interpreter coulds return other type that a stopper (default: `true`)
+     * @param allowNonStopperResult If there is only one instruction, and it's not a "stopper", if the interpreter should returns it after processed it (default: `true`)
      * @param incrementScope If true, after the execution of the process the interpreter will delete all created variables/functions/...
      * @param scopeVariables The cache variable to set unicly in this scope
      */
-    async process(instructions: ParserReturn["content"], allowNotStopperResult= true, incrementScope = true, scopeVariables: cacheInterface["registered"] = {variables: {}, functions: {}, objects: {}}): Promise<ParsableObjectList | void> {
+    async process(instructions: ParserReturn["content"], allowNonStopperResult= true, incrementScope = true, scopeVariables: cacheInterface["registered"] = {variables: {}, functions: {}, objects: {}}): Promise<ParsableObjectList | void> {
         let result: ParsableObjectList | undefined = undefined
 
         const saveVars = Object.keys(this.cache.registered.variables)
@@ -819,10 +873,15 @@ export default class Interpreter {
         if(instructions.length) {
             if(instructions.length <= 1) {
                 result = await this.eval(instructions[0])
-                if(!allowNotStopperResult && result.type !== "stopper") result = undefined
+                if(!allowNonStopperResult && result.type !== "stopper") result = undefined
             } else {
                 for await(const data of instructions) {
-                    const res = await this.eval(data)
+                    try {
+                        var res = await this.eval(data)
+                    } catch (err) {
+                        return console.error(`[CRITICAL ERROR]: Map -> ${data.map}\n${err}`)
+                    }
+
                     if(res?.type === "stopper") {
                         result= res
                         break;
@@ -851,17 +910,32 @@ export default class Interpreter {
     //? In-console mode methods //
     async start_InConsoleMode(): Promise<void> {
         inConsoleMode= true
-        const input = await this.input("[FLYLANG]> ")
+        const input = await this.consoleModeInput()
         if(input.startsWith('//')) return this.exec_InConsoleCmd(input.slice(2))
 
-        this.currentPosition = new Positioner(input, this.currentPosition.asParent, this.currentPosition.file)
-        try {
-            const evaluated = await this.cache.builtin.functions['eval']({type: "string", data: [{type: "text", data: input}]})
-            this.print(stringify(evaluated, true))
-        } catch (_) {}
+        if(input.trim()) {
+            this.currentPosition = new Positioner(input, this.currentPosition.asParent, this.currentPosition.file)
+            try {
+                const evaluated = await this.cache.builtin.functions['eval']({type: "string", data: [{type: "text", data: input}]})
+                this.print(stringify(evaluated, true))
+            } catch (_) { }
+        }
 
         return this.start_InConsoleMode()
     }
+    async consoleModeInput(prefix= "[FLYLANG]", prec = ""): Promise<string> {
+        let input = prec + await this.input(prefix + "> ")
+        try {
+            setAllowErrors(false)
+            safeSplit(new Positioner(input))
+        } catch (_) {
+            return await this.consoleModeInput(`${" ".repeat(prefix.length)}`, `${input}\n`)
+        }
+
+        setAllowErrors(true)
+        return input
+    }
+
     async exec_InConsoleCmd(cmd: string): Promise<void> {
         const helpCmd = "help -> Display this message\n"
                         + "clear -> Clear the console\n"

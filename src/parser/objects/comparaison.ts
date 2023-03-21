@@ -33,7 +33,7 @@ export default class Comparaison extends CompilerObject {
         const comparators = Object.values(rules.comparaisons)
         comparators.unshift(...comparators.map(char => rules.invertion_char + char))
         const separated = separate(code, comparators)
-        if(!separated) return new RaiseFlyLangCompilerError(fastSyntaxError(code)).raise()
+        if(!separated) throw new RaiseFlyLangCompilerError(fastSyntaxError(code)).raise()
         
         return await handleRecursiveSeparate<ComparaisonReturn>(separated, async (comparator, operand1, operand2) => {
             const op1 = (

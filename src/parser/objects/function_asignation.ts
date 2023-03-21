@@ -17,12 +17,14 @@ export type FunctionAsignationReturn = {
     }
 }
 export default class FunctionAsignation extends CompilerObject {
-    constructor(data: ParserClassData) {
+    allowKeywordsNaming= false
+    constructor(data: ParserClassData, allowKeywordsNaming= false) {
         super(data, "fct_asignation", `fn my_func(parameter1, ..., parametern, \n    #(code)\n)`, {
             fast: /fn(?:\s+[a-zA-Z_]\w*)?\s*\(.*\)/s,
             detailed: /fn(?:\s+(?<name>[a-zA-Z_]\w*))?\s*\((?<args>(?:\s*[a-zA-Z_]\w*\s*,)*)\s*(?<code>.*)\)/s
         })
 
+        if(allowKeywordsNaming) this.allowKeywordsNaming = true
         this.bonus_score+= 1
     }
 
@@ -34,7 +36,7 @@ export default class FunctionAsignation extends CompilerObject {
                 args= details.groups.args, // Need to be parsed
                 fct_code= details.groups.code // Need to be parsed
         ;
-        if(langRules.keywords.find(w => w === name)) throw new RaiseFlyLangCompilerError(new NameError(code.take(name), name)).raise()
+        if(!this.allowKeywordsNaming && langRules.keywords.find(w => w === name)) throw new RaiseFlyLangCompilerError(new NameError(code.take(name), name)).raise()
 
         const args_array: Positioner[] = []
         if(args) {
@@ -61,9 +63,9 @@ export default class FunctionAsignation extends CompilerObject {
             data: this.data
         })
 
-        const fct_code_pos = code.take(fct_code).autoTrim()        
+        const fct_code_pos = code.take(fct_code).autoTrim()
         const compiled= await parser.compile(fct_code_pos)
-        if(!compiled) return new RaiseFlyLangCompilerError(new UnknowError("Your code is great, but mine is bad...")).raise()
+        if(!compiled) throw new RaiseFlyLangCompilerError(new UnknowError("Your code is great, but mine is bad...")).raise()
 
         return {
             type: "function_asignation",
