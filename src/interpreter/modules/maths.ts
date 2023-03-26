@@ -5,6 +5,7 @@ import RaiseFlyLangCompilerError from "../../errors/raiseError";
 import OperationError from "../../errors/interpreter/operationError";
 import { NumberReturn } from "../../parser/objects/number";
 import { ParsableObjectList } from "../../parser/parser";
+import RaiseCodeError from "../../errors/raiseCodeError";
 
 const pi = new BigNumber("3.1415926535897932384626433832795028841971693993751")
 const e = new BigNumber("2.71828182845904523536028747135266249775724709369995")
@@ -61,14 +62,14 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
         functions: {
             async cos(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a cosine with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseCodeError(intrp.currentPosition, new OperationError("Cannot perform a cosine with a non-number value.")).raise()
                 
                 const res =  TaylorCosCalculation(nb.data.number)
                 return {type: "number", data: {number: res, negative: res.isNegative(), type: res.isInteger() ? "integer" : "float"}}
             },
             async sin(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a sine with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseCodeError(intrp.currentPosition, new OperationError("Cannot perform a sine with a non-number value.")).raise()
                 
                 let x = nb.data.number
                 while(x.isGreaterThan(pi)) x = x.minus(twoPI)
@@ -88,14 +89,14 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
             },
             async factorial(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Cannot perform a factorial with a non-number value.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN()) throw new RaiseCodeError(intrp.currentPosition, new OperationError("Cannot perform a factorial with a non-number value.")).raise()
                 
                 let res = factorial(nb.data.number)
                 return {type: "number", data: {negative: res.isNegative(), number: res, type: res.isInteger() ? "integer" : "float"}}
             },
             async sqrt(nb, ..._) {
                 nb = await intrp.eval(nb)
-                if(nb.type !== "number" || nb.data.number.isNaN() || nb.data.number.isLessThan(0)) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Square root can only be calculated with a positive number.")).raise()
+                if(nb.type !== "number" || nb.data.number.isNaN() || nb.data.number.isLessThan(0)) throw new RaiseCodeError(intrp.currentPosition, new OperationError("Square root can only be calculated with a positive number.")).raise()
                 const res = nb.data.number.sqrt()
                 return {type: "number", data: {negative: false, number: res, type: res.isInteger() ? "integer" : "float"}}
             },
@@ -105,7 +106,7 @@ export default function modl(intrp : Interpreter): cacheInterface["builtin"] {
                 if (
                     pow.type !== "number" || pow.data.number.isNaN()
                     || by.type !== "number" || by.data.number.isNaN()
-                ) throw new RaiseFlyLangCompilerError(new OperationError(intrp.currentPosition, "Pow can only be calculated with a number, by a number.")).raise()
+                ) throw new RaiseCodeError(intrp.currentPosition, new OperationError("Pow can only be calculated with a number, by a number.")).raise()
                 const res = pow.data.number.pow(by.data.number)
                 return {type: "number", data: {negative: res.isNegative(), number: res, type: res.isInteger() ? "integer" : "float"}}
             },

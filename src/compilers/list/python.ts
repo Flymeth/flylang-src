@@ -161,7 +161,8 @@ const python: CompilerTypeObject = {
                 const table: {[key in typeof type]: string} = {
                     fct_returns: "return",
                     block_pass: "pass",
-                    loop_breaks: "break"
+                    loop_breaks: "break",
+                    exec_kill: "raise"
                 }
                 if(data.data.return && type !== "fct_returns") console.warn("<!!!> Break/pass statement with a returned value isn't supported yet in python! <!!!>")
 

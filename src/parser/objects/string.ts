@@ -2,9 +2,9 @@ import Parser, { ParsedObject, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import Positioner from "../../utils/positioner.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 const {string, string_data} = rules
 
 export type StringReturn = {
@@ -68,7 +68,7 @@ export default class String extends CompilerObject {
         text_data.start++ // Exclude the "(" character
         
         const parsedData: ParsedObject | null = await Parser.parse(this.data, text_data.autoTrim().split(), variableAcceptedObjects(this.data))
-        if(!parsedData) throw new RaiseFlyLangCompilerError(fastSyntaxError(text_data, "Invalid in-string data")).raise()
+        if(!parsedData) throw new RaiseCodeError(text_data, new SyntaxError("Invalid in-string data")).raise()
         parsedData.map = text_data.asOriginal.indexes
         
         const data: StringReturn["data"] = beforeTxt ? [{

@@ -1,4 +1,5 @@
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import Positioner from "../../utils/positioner.js";
 import { variableAcceptedObjects } from "../../utils/registeries.js";
@@ -32,7 +33,7 @@ export default class ClassInstanciation extends CompilerObject {
 
         const classProperties = await Promise.all(safeSplit(code.take(props), [","]).map(async v => {
             const parsed = await Parser.parse(this.data, v, variableAcceptedObjects(this.data))
-            if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(v, "Invalid syntax.")).raise()
+            if(!parsed) throw new RaiseCodeError(v, new SyntaxError("Invalid syntax.")).raise()
             return parsed
         }))
 

@@ -29,7 +29,8 @@
     "stoppers": {
         "fct_returns": "return",
         "loop_breaks": "break",
-        "block_pass": "pass"
+        "block_pass": "pass",
+        "exec_kill": "stop"
     },
     "comparaisons": {
         "sup": ">=",
@@ -55,6 +56,6 @@
         "if", "else", "for", "while",
         "until", "cs", "fn", "new",
         "import", "only", "in", "return",
-        "pass", "break", "try"
+        "pass", "break", "try", "stop"
     ]
 }

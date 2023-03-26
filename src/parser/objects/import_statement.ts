@@ -1,5 +1,3 @@
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import Positioner from "../../utils/positioner.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
 import { removeUselessPriorities } from "../../utils/tools/symplifier.js";
@@ -9,6 +7,8 @@ import String, { StringReturn } from "./string.js";
 import Variable, { VariableReturn } from "./variable.js";
 import { langRules as rules } from "../../utils/registeries.js";
 import { join, parse } from "path";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 
 type defaultImportaterReturnData = {
     /**
@@ -50,7 +50,7 @@ export default class Importater extends CompilerObject {
             regResult.end = regResult.start + symplified.length
         }
         const splitted = safeSplit(regResult.split(), [","]).map(e => e.now.trim())
-        if(splitted.length === 1 && /\(\s*\)/.test(splitted[0])) throw new RaiseFlyLangCompilerError(fastSyntaxError(regResult, "Invalid properties deconstructor.")).raise()
+        if(splitted.length === 1 && /\(\s*\)/.test(splitted[0])) throw new RaiseCodeError(regResult, new SyntaxError("Invalid properties deconstructor.")).raise()
         return splitted
     }
 
@@ -69,7 +69,7 @@ export default class Importater extends CompilerObject {
             parser.requestFile()
             if(typeof parser.data.file.src.content !== "string") throw 0
         } catch (_) {
-            throw new RaiseFlyLangCompilerError(fastSyntaxError(importCode, "File not found.")).raise()
+            throw new RaiseCodeError(importCode, new SyntaxError("File not found.")).raise()
         }
         const fileContent = parser.data.file.src.content
         const positioner = new Positioner(fileContent, undefined, {
@@ -80,7 +80,7 @@ export default class Importater extends CompilerObject {
         try {
             parsed = await parser.compile(positioner)
         } catch (_) {  }
-        if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(positioner, "Invalid syntax. Cannot import module.")).raise()
+        if(!parsed) throw new RaiseCodeError(positioner, new SyntaxError("Invalid syntax. Cannot import module.")).raise()
 
         return parsed
     }
@@ -97,7 +97,7 @@ export default class Importater extends CompilerObject {
         const parsedFrom = await Parser.parse(this.data, fromPosition, [
             new Variable(this.data), new String(this.data)
         ]) as VariableReturn | StringReturn | null
-        if(!parsedFrom) throw new RaiseFlyLangCompilerError(fastSyntaxError(fromPosition, "Invalid import file/module.")).raise()
+        if(!parsedFrom) throw new RaiseCodeError(fromPosition, new SyntaxError("Invalid import file/module.")).raise()
         
         const deconstructedPosition = !!deconstructed && code.take(deconstructed)        
         const deconstructedProperties = deconstructedPosition && this.parseDeconstructedProps(deconstructedPosition) || "all"
@@ -119,7 +119,7 @@ export default class Importater extends CompilerObject {
         if(parsedFrom.type === "string") {
             if( parsedFrom.data.length > 1 
                 || parsedFrom.data[0].type !== "text"
-            ) throw new RaiseFlyLangCompilerError(fastSyntaxError(fromPosition, "Invalid import syntax")).raise()
+            ) throw new RaiseCodeError(fromPosition, new SyntaxError("Invalid import syntax")).raise()
             
             const input = parsedFrom.data[0].data
             const filePath = join(code.file.parsed.dir, input) + (input.endsWith(".fly") ? "" : ".fly")

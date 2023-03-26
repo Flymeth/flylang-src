@@ -1,8 +1,8 @@
 {
   "origin": {
     "file": {
-      "path": "C:\\Users\\johan\\OneDrive\\Documents\\.perso\\Dev\\Files\\Compilers\\FlyLang\\tests\\input.fly",
-      "content": "if(true,\r\n    try(\r\n        std.out(\"hello\")\r\n    )else(\r\n        std.out(\"GoodBye!\")\r\n    )\r\n)else(\r\n    std.out(\"If is false!\")\r\n)"
+      "path": "C:\\Users\\johan\\OneDrive\\Documents\\.perso\\Dev\\Files\\Languages\\FlyLang\\tests\\input.fly",
+      "content": "if(true,\r\n    if(3=3,\r\n        if(1,\r\n            std.out(\"Must pass!\")\r\n            pass\r\n        )\r\n        std.out(\"Not passed!\")\r\n    )\r\n    std.out(\"Must be show\")\r\n)"
     }
   },
   "content": [
@@ -17,14 +17,141 @@
           },
           "map": [
             0,
-            132
+            171
           ]
         },
         "code": [
           {
-            "type": "try_statement",
+            "type": "if_statement",
             "data": {
-              "try": [
+              "type": "if",
+              "condition": {
+                "type": "comparaison",
+                "data": {
+                  "comparaison": {
+                    "name": "egual",
+                    "invert": false
+                  },
+                  "operators": [
+                    {
+                      "type": "number",
+                      "data": {
+                        "type": "integer",
+                        "negative": false,
+                        "number": "3"
+                      },
+                      "map": [
+                        3,
+                        4
+                      ]
+                    },
+                    {
+                      "type": "number",
+                      "data": {
+                        "type": "integer",
+                        "negative": false,
+                        "number": "3"
+                      },
+                      "map": [
+                        3,
+                        4
+                      ]
+                    }
+                  ]
+                },
+                "map": [
+                  0,
+                  125
+                ]
+              },
+              "code": [
+                {
+                  "type": "if_statement",
+                  "data": {
+                    "type": "if",
+                    "condition": {
+                      "type": "number",
+                      "data": {
+                        "type": "integer",
+                        "negative": false,
+                        "number": "1"
+                      },
+                      "map": [
+                        0,
+                        69
+                      ]
+                    },
+                    "code": [
+                      {
+                        "type": "attribute_access",
+                        "data": {
+                          "origin": {
+                            "fromScript": false,
+                            "object": {
+                              "type": "variable",
+                              "data": {
+                                "name": "std"
+                              },
+                              "map": [
+                                0,
+                                4
+                              ]
+                            }
+                          },
+                          "access": [
+                            {
+                              "fromScript": false,
+                              "object": {
+                                "type": "function_call",
+                                "data": {
+                                  "name": "out",
+                                  "arguments": [
+                                    {
+                                      "type": "string",
+                                      "data": [
+                                        {
+                                          "type": "text",
+                                          "data": "Must pass!"
+                                        }
+                                      ],
+                                      "map": [
+                                        8,
+                                        20
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "map": [
+                                  4,
+                                  21
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        "map": [
+                          0,
+                          21
+                        ]
+                      },
+                      {
+                        "type": "stopper",
+                        "data": {
+                          "type": "block_pass",
+                          "return": null
+                        },
+                        "map": [
+                          35,
+                          39
+                        ]
+                      }
+                    ]
+                  },
+                  "map": [
+                    0,
+                    69
+                  ]
+                },
                 {
                   "type": "attribute_access",
                   "data": {
@@ -36,8 +163,8 @@
                           "name": "std"
                         },
                         "map": [
-                          14,
-                          18
+                          79,
+                          83
                         ]
                       }
                     },
@@ -54,159 +181,93 @@
                                 "data": [
                                   {
                                     "type": "text",
-                                    "data": "hello"
+                                    "data": "Not passed!"
                                   }
                                 ],
                                 "map": [
-                                  22,
-                                  29
+                                  87,
+                                  100
                                 ]
                               }
                             ]
                           },
                           "map": [
-                            18,
-                            30
+                            83,
+                            101
                           ]
                         }
                       }
                     ]
                   },
                   "map": [
-                    14,
-                    30
+                    79,
+                    101
                   ]
                 }
-              ],
-              "handler": {
-                "type": "function_asignation",
-                "data": {
-                  "name": null,
-                  "arguments": [],
-                  "code": [
-                    {
-                      "type": "attribute_access",
-                      "data": {
-                        "origin": {
-                          "fromScript": false,
-                          "object": {
-                            "type": "variable",
-                            "data": {
-                              "name": "std"
-                            },
-                            "map": [
-                              54,
-                              58
-                            ]
-                          }
-                        },
-                        "access": [
-                          {
-                            "fromScript": false,
-                            "object": {
-                              "type": "function_call",
-                              "data": {
-                                "name": "out",
-                                "arguments": [
-                                  {
-                                    "type": "string",
-                                    "data": [
-                                      {
-                                        "type": "text",
-                                        "data": "GoodBye!"
-                                      }
-                                    ],
-                                    "map": [
-                                      62,
-                                      72
-                                    ]
-                                  }
-                                ]
-                              },
-                              "map": [
-                                58,
-                                73
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      "map": [
-                        54,
-                        73
-                      ]
-                    }
-                  ]
-                }
-              }
+              ]
             },
             "map": [
               0,
-              78
+              125
             ]
-          }
-        ],
-        "else": {
-          "type": "else",
-          "code": [
-            {
-              "type": "attribute_access",
-              "data": {
-                "origin": {
+          },
+          {
+            "type": "attribute_access",
+            "data": {
+              "origin": {
+                "fromScript": false,
+                "object": {
+                  "type": "variable",
+                  "data": {
+                    "name": "std"
+                  },
+                  "map": [
+                    131,
+                    135
+                  ]
+                }
+              },
+              "access": [
+                {
                   "fromScript": false,
                   "object": {
-                    "type": "variable",
+                    "type": "function_call",
                     "data": {
-                      "name": "std"
+                      "name": "out",
+                      "arguments": [
+                        {
+                          "type": "string",
+                          "data": [
+                            {
+                              "type": "text",
+                              "data": "Must be show"
+                            }
+                          ],
+                          "map": [
+                            139,
+                            153
+                          ]
+                        }
+                      ]
                     },
                     "map": [
-                      92,
-                      96
+                      135,
+                      154
                     ]
                   }
-                },
-                "access": [
-                  {
-                    "fromScript": false,
-                    "object": {
-                      "type": "function_call",
-                      "data": {
-                        "name": "out",
-                        "arguments": [
-                          {
-                            "type": "string",
-                            "data": [
-                              {
-                                "type": "text",
-                                "data": "If is false!"
-                              }
-                            ],
-                            "map": [
-                              100,
-                              114
-                            ]
-                          }
-                        ]
-                      },
-                      "map": [
-                        96,
-                        115
-                      ]
-                    }
-                  }
-                ]
-              },
-              "map": [
-                92,
-                115
+                }
               ]
-            }
-          ]
-        }
+            },
+            "map": [
+              131,
+              154
+            ]
+          }
+        ]
       },
       "map": [
         0,
-        132
+        171
       ]
     }
   ]

@@ -141,6 +141,9 @@ export default function stringify(object: ParsedObject, colors= false, insideObj
             const coloredString = colors ? chalk.green(insideObjectString) : insideObjectString
             return coloredString
         }
+        case "try_statement": {
+            return `try {${data.try.length} items}`
+        }
     }
 
     return "<INVALID OBJECT>"

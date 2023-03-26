@@ -1,5 +1,6 @@
 import NameError from "../../errors/code/NameError.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import Positioner from "../../utils/positioner.js";
 import { langRules } from "../../utils/registeries.js";
@@ -37,7 +38,7 @@ export default class ClassConstr extends CompilerObject {
                 content = detailed.groups.data
         ;
         
-        if(langRules.keywords.find(w => w === name)) throw new RaiseFlyLangCompilerError(new NameError(code, name)).raise()
+        if(langRules.keywords.find(w => w === name)) throw new RaiseCodeError(code, new NameError(name)).raise()
 
         const splittedContent = safeSplit(code.take(content), [","])
         const classExtenders: string[] = []
@@ -52,16 +53,16 @@ export default class ClassConstr extends CompilerObject {
             try {
                 var parsedConstructor = constructor && await new FunctionAsignation(this.data).parse(constructor)
             } catch (_) { }
-            if(!parsedConstructor) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "A valid constructor is required in a class definition.")).raise()
+            if(!parsedConstructor) throw new RaiseCodeError(code, new SyntaxError("A valid constructor is required in a class definition.")).raise()
             
-            if(splittedContent.length > 1) throw new RaiseFlyLangCompilerError(fastSyntaxError(splittedContent.reduce((pre, cur) => pre.concat(cur) || cur))).raise()
+            if(splittedContent.length > 1) throw new RaiseCodeError(splittedContent.reduce((pre, cur) => pre.concat(cur) || cur), new SyntaxError()).raise()
             
             const parsedClassCode: ParserReturn["content"] = []
             const data = splittedContent.shift()
             if(data) {
                 const compiler = new Parser({type: "manualy", data: this.data})
                 const classCode = await compiler.compile(data)
-                if(!classCode) throw new RaiseFlyLangCompilerError(fastSyntaxError(data, "Invalid syntax for a class.")).raise()
+                if(!classCode) throw new RaiseCodeError(data, new SyntaxError("Invalid syntax for a class.")).raise()
                 parsedClassCode.push(...classCode.content)
             }            
         

@@ -1,3 +1,5 @@
+import chalk from "chalk"
+
 export default class Error {
     data: {
         name: string,
@@ -9,6 +11,6 @@ export default class Error {
     }
     
     toString() {
-        return `[${this.data.type}]> ${this.data.name}\n${this.data.customMessage?.split('\n').map(msg => `> ${msg}`).join('\n') || ""}`
+        return `${chalk.gray(`[${this.data.type}]>`)} ${chalk.underline(chalk.bold(chalk.red(this.data.name)))}\n${chalk.italic(this.data.customMessage?.split('\n').map(msg => `> ${msg}`).join('\n') || "")}`
     }
 }

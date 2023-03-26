@@ -5,12 +5,12 @@ import FunctionAsignation, { FunctionAsignationReturn } from "./function_asignat
 import FunctionCall, { FunctionCallReturn } from "./function.js"
 import Variable, { VariableReturn } from "./variable.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { variableAcceptedObjects } from "../../utils/registeries.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
 import Stopper from "./stoppers.js";
 import AttrAccess, { AttrAccessReturn } from "./attr_access.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 
 const loop_types = ["while", "until", "for"]
 
@@ -52,19 +52,19 @@ export default class Loops extends CompilerObject {
         const input_code = code.take(inputs)
         const splitted = safeSplit(input_code, [","], false, 1)
         
-        if(splitted.length !== 2) throw new RaiseFlyLangCompilerError(fastSyntaxError(input_code, "Loops must have only 2 arguments. One for the condition, and the other one for the execution.")).raise()
+        if(splitted.length !== 2) throw new RaiseCodeError(input_code, new SyntaxError("Loops must have only 2 arguments. One for the condition, and the other one for the execution.")).raise()
         
         this.data.objects.push(new Stopper(this.data, ["loop_breaks"]))
         const [firstArg, secondArg] = splitted
         if(loopType === "for") {
             const iterator = await FlyLang.parse(this.data, firstArg)
-            if(!iterator) throw new RaiseFlyLangCompilerError(fastSyntaxError(firstArg))
+            if(!iterator) throw new RaiseCodeError(firstArg, new SyntaxError())
             
             //@ts-ignore TS can't understand that is just the given class that will parse the code that I give.
             const executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn | null = await FlyLang.parse(this.data, secondArg, [
                 new FunctionAsignation(this.data), new Variable(this.data), new FunctionCall(this.data), new AttrAccess(this.data)
             ])
-            if(!executor) throw new RaiseFlyLangCompilerError(fastSyntaxError(secondArg)).raise()
+            if(!executor) throw new RaiseCodeError(secondArg, new SyntaxError()).raise()
 
             return {
                 type: "loop",
@@ -76,13 +76,13 @@ export default class Loops extends CompilerObject {
             }
         }else {
             const condition = await FlyLang.parse(this.data, firstArg, variableAcceptedObjects(this.data))
-            if(!condition) throw new RaiseFlyLangCompilerError(fastSyntaxError(firstArg))
+            if(!condition) throw new RaiseCodeError(firstArg, new SyntaxError())
 
             const compiler = new FlyLang({
                 type: "manualy", data: this.data
             })
             const code = await compiler.compile(secondArg)
-            if(!code) throw new RaiseFlyLangCompilerError(fastSyntaxError(secondArg))
+            if(!code) throw new RaiseCodeError(secondArg, new SyntaxError())
 
             return {
                 type: "loop",

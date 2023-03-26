@@ -1,8 +1,7 @@
-import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class importError extends SyntaxError {
-    constructor(position: Positioner, message?: string) {
-        super(position, `Error when wanted to import this module. ${message || ""}`)
+export default class importError extends Error {
+    constructor(message?: string) {
+        super("IMPORT_ERROR", 7, `Error when wanted to import this module. ${message || ""}`)
     }
 }

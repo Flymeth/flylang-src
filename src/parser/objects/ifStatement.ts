@@ -1,11 +1,14 @@
 import FlyLang, { ParserReturn, ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
-import safeSplit, { createSplitError } from "../../utils/tools/safeSplit.js";
+import safeSplit from "../../utils/tools/safeSplit.js";
 import { multipleEndsWith } from "../../utils/tools/extremityTester.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import Positioner from "../../utils/positioner.js";
-import SyntaxError, { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SplitError from "../../errors/code/splitError.js";
+import Stopper from "./stoppers.js";
 
 type IfElseObjectType = {
     type: "if",
@@ -58,11 +61,12 @@ export default class ifStatement extends CompilerObject {
             1
         )
         
-        if(!splitted) throw new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
+        if(!splitted) throw new RaiseCodeError(block, new SplitError()).raise()        
         const executable = splitted.shift()
-        if(!executable) throw new RaiseFlyLangCompilerError(createSplitError(block)).raise()        
+        if(!executable) throw new RaiseCodeError(block, new SplitError()).raise()        
         executable.start+= openner.length
         
+        this.data.objects.push(new Stopper(this.data, ["block_pass"]))
         const parser = new FlyLang({
             type: "manualy",
             data: this.data
@@ -80,7 +84,7 @@ export default class ifStatement extends CompilerObject {
     private async parseElse(code: Positioner): Promise<IfElseObjectType | null> {
         const reg = /\s*else\s*(?:(?<is_elif>if.+)|(?<simple_else>\((?<requires_parsing>.+)))/s
         const regRes = reg.exec(code.now)
-        if(!regRes || !(regRes.groups?.is_elif || regRes.groups?.requires_parsing)) throw new RaiseFlyLangCompilerError(new SyntaxError(code))
+        if(!regRes || !(regRes.groups?.is_elif || regRes.groups?.requires_parsing)) throw new RaiseCodeError(code, new SyntaxError())
         
         const {is_elif, requires_parsing} = regRes.groups
         if(is_elif) {
@@ -94,7 +98,7 @@ export default class ifStatement extends CompilerObject {
             pos.start = code.now.indexOf(requires_parsing)
             pos.end = pos.start + requires_parsing.length
             const block = await this.parseBlock(pos)
-            if(!block || block.next?.autoTrim().now) throw new RaiseFlyLangCompilerError(new SyntaxError(pos, "'else (...)' must be the last block of your if/else statement."))
+            if(!block || block.next?.autoTrim().now) throw new RaiseCodeError(pos, new SyntaxError("'else (...)' must be the last block of your if/else statement."))
             const {result} = block
             return {
                 type: "else",
@@ -121,7 +125,7 @@ export default class ifStatement extends CompilerObject {
         requires_parsing.start = pos.now.indexOf(ifRegRes.groups.requires_parsing)
         requires_parsing.end= requires_parsing.start + ifRegRes.groups.requires_parsing.length        
         const block = await this.parseBlock(requires_parsing)
-        if(!block) throw new RaiseFlyLangCompilerError(fastSyntaxError(requires_parsing)).raise()
+        if(!block) throw new RaiseCodeError(requires_parsing, new SyntaxError()).raise()
 
         const {result, next} = block
 

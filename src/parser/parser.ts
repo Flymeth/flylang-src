@@ -3,7 +3,6 @@ import PathError from "../errors/compiler/PathError.js"
 import RaiseFlyLangCompilerError from "../errors/raiseError.js"
 import { Arguments, DotProperties } from "../utils/readers.js"
 import { ParsedPath, join, parse } from "path"
-import { fastSyntaxError } from "../errors/code/SyntaxError.js"
 import String, { StringReturn } from "./objects/string.js"
 import CompilerObject from "./objects/_object.js"
 import Commentary, { CommentaryReturn } from "./objects/comment.js"
@@ -28,8 +27,9 @@ import AttrAccess, { AttrAccessReturn } from "./objects/attr_access.js"
 import ClassConstr, { ClassConstrReturn } from "./objects/class_construct.js"
 import ClassInstanciation, { ClassInstanciationReturn } from "./objects/class_instanciation.js"
 import Importater, { ImportaterReturn } from "./objects/import_statement.js"
-import { langRules } from "../utils/registeries.js"
 import TryStatement, { TryStatementReturn } from "./objects/tryStatement.js"
+import RaiseCodeError from "../errors/raiseCodeError.js"
+import SyntaxError from "../errors/code/SyntaxError.js"
 
 export type ParserClassData = {
     arguments: Arguments,
@@ -132,7 +132,7 @@ export default class Parser {
             this.data.objects= objects || [new String(this.data), new Commentary(this.data), new Number(this.data), new StrictValue(this.data), 
                 new VariableAsignation(this.data), new Variable(this.data), new FunctionAsignation(this.data), new Operation(this.data),
                 new ifStatement(this.data), new FunctionCall(this.data), new Comparaison(this.data), new BooleanTest(this.data),
-                new Stopper(this.data, ["block_pass"]), new Array(this.data), new DictObject(this.data), new Loops(this.data), new AttrAccess(this.data),
+                new Stopper(this.data, ["exec_kill"]), new Array(this.data), new DictObject(this.data), new Loops(this.data), new AttrAccess(this.data),
                 new ClassConstr(this.data), new ClassInstanciation(this.data), new Importater(this.data), new TryStatement(this.data)
             ]
         }
@@ -187,7 +187,7 @@ export default class Parser {
             if(content.autoTrim().now) {
                 const result = await Parser.parse(this.data, content.split())
                 
-                if(!result) throw new RaiseFlyLangCompilerError(fastSyntaxError(content.asOriginal)).raise()
+                if(!result) throw new RaiseCodeError(content, new SyntaxError()).raise()
                 compiled.push(result)
             }
         }

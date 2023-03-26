@@ -1,8 +1,7 @@
-import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class ExecutionError extends SyntaxError {
-    constructor(position: Positioner, message: string) {
-        super(position, `Could not continue execution. ${message}`)
+export default class ExecutionError extends Error {
+    constructor(message: string) {
+        super("EXEC.ERROR", 9, `Could not continue execution. ${message}`)
     }
 }

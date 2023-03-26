@@ -9,10 +9,11 @@ import { NumberReturn } from "../parser/objects/number";
 import { DictObjectReturn } from "../parser/objects/object";
 import { StringReturn } from "../parser/objects/string";
 import Parser, { ParsableObjectList } from "../parser/parser";
-import Interpreter, { UNDEFINED_TYPE } from "./interpreter";
+import Interpreter, { ICM, UNDEFINED_TYPE } from "./interpreter";
 import {BigNumber} from "bignumber.js";
 import stringify, { createStringObj } from "./stringify";
 import { join } from "path";
+import RaiseCodeError from "../errors/raiseCodeError";
 
 export type methodObject<obj extends ParsableObjectList["data"]> = {
     variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
@@ -70,7 +71,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     const depthBuiltIn= 5
                     interpMethods.print(`# REGISTERED:\n${inspect(interpMethods.cache.registered, false, depthRegistered)}\n# BUILTIN:\n${inspect(interpMethods.cache.builtin, false, depthBuiltIn)}`)
                     await interpMethods.input("[DEBUGGER CALLED]>> Press Enter To Continue. -> ")
-                    interpMethods.consoleModeCache.blockNextPrint = true
+                    if(ICM()) interpMethods.consoleModeCache.blockNextPrint = true
                     return UNDEFINED_TYPE
                 }
             },
@@ -87,7 +88,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     return await interpMethods.eval(JSON.parse(JSON.stringify(obj)))
                 },
                 async range(fromObj, toObj, stepObj, ..._) {
-                    if(!fromObj) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range requires at least 1 argument.")).raise()
+                    if(!fromObj) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Range requires at least 1 argument.")).raise()
                     fromObj = await interpMethods.eval(fromObj)
                     if(toObj) toObj = await interpMethods.eval(toObj)
                     if(stepObj) stepObj = await interpMethods.eval(stepObj)
@@ -95,7 +96,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                         fromObj && fromObj.type !== "number"
                         || toObj && toObj.type !== "number"
                         || stepObj && stepObj.type !== "number"
-                    ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Range arguments must be of type number.")).raise()
+                    ) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Range arguments must be of type number.")).raise()
 
                     let [from, to, step] = [fromObj.data.number, toObj?.data.number, stepObj?.data.number]
                     if(!to) [from, to] = [new BigNumber(0), from]
@@ -104,10 +105,10 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                         step.isEqualTo(0)
                         || step.isLessThan(0) && from.isLessThan(to)
                         || step.isGreaterThan(0) && from.isGreaterThan(to)
-                    ) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "Step can't be egual to 0. If the initial value is greater than the ending value, step must be lower than 0, and reversly.")).raise()
+                    ) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Step can't be egual to 0. If the initial value is greater than the ending value, step must be lower than 0, and reversly.")).raise()
 
                     const finalLen = to.minus(from).abs()
-                    if(finalLen.isGreaterThan(parseInt(interpMethods.data.properties.getValue("maxObjectsSize")?.value || "0"))) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "The output array length will be above the limit.")).raise()
+                    if(finalLen.isGreaterThan(parseInt(interpMethods.data.properties.getValue("maxObjectsSize")?.value || "0"))) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("The output array length will be above the limit.")).raise()
 
                     const array: NumberReturn[] = []
                     const checkerIsGreaterThan = step.isLessThan(0)
@@ -116,7 +117,8 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                 },
                 async typeof(obj, ..._) {
                     obj = await interpMethods.eval(obj)
-                    return {type: "string", data: [{type: "text", data: obj.type}]}
+                    const stringType = obj.type === "variable" && obj.data.name.startsWith('//') ? /[a-z-]+$/i.exec(obj.data.name)?.[0] || obj.type : obj.type
+                    return createStringObj(stringType)
                 },
                 async eval(str, ..._) {
                     if(str.type !== "string") return UNDEFINED_TYPE
@@ -169,7 +171,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                 },
                 functions: {
                     async add(object, ...args) {
-                        if((args.length + object.values.length) > parseInt(interpMethods.data.properties.getValue("maxObjectsSize")?.value || "250")) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, "The array length will be above the limit.")).raise()
+                        if((args.length + object.values.length) > parseInt(interpMethods.data.properties.getValue("maxObjectsSize")?.value || "250")) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("The array length will be above the limit.")).raise()
                         const parsedValues= await Promise.all(args.map(async e => await interpMethods.eval(e)))
                         
                         object.values = [...object.values, ...parsedValues]
@@ -179,7 +181,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                         const index = await interpMethods.eval(args[0] || {type: "number", data: {number: 0}})
                         if(index.type !== "number") return UNDEFINED_TYPE
                         const numberedIndex = index.data.number.isLessThan(0) ? index.data.number.plus(object.values.length) : index.data.number
-                        if(numberedIndex.isLessThan(0) || numberedIndex.isGreaterThanOrEqualTo(object.values.length)) throw new RaiseFlyLangCompilerError(new FunctionError(interpMethods.currentPosition, `Index [${numberedIndex}] does not exist on array.`)).raise()
+                        if(numberedIndex.isLessThan(0) || numberedIndex.isGreaterThanOrEqualTo(object.values.length)) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError(`Index [${numberedIndex}] does not exist on array.`)).raise()
                         const deleted = object.values[numberedIndex.toNumber()]
                         object.values = object.values.filter((_, i) => !numberedIndex.isEqualTo(i))
 

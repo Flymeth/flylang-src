@@ -29,20 +29,23 @@ function simplifyPriorities(code: string): string[] | null {
     return splitted.map((value, index) => {
         const closer = multipleEndsWith(value, symplifies_end)
         if(!closer) return value
-        const opener = symplifies_start[symplifies_end.indexOf(closer)]
-        const priorityIndex = multipleSearch(value, [opener])
+        const openner = symplifies_start[symplifies_end.indexOf(closer)]
+        const priorityIndex = multipleSearch(value, [openner])
 
         const before = value.slice(0, priorityIndex)
         //? For things like "if(...,)"
         if(rules.keywords.find(key => before === key)) return value
 
-        const isFunction = before && multipleEndsWith(before, [/[a-z]\w*\s*/i])        
-        if(isFunction || priorityIndex > 0 || splitted[index + 1]?.startsWith('.')) {
+        const isFunction = !rules.string.closer.includes(closer) && before && multipleEndsWith(before, [/[a-z]\w*\s*/i])
+        const strToSympl = rules.string.closer.includes(closer) && multipleStartsWith(value, rules.string.openner) === openner && splitted[index +1] // "&& if there is something else" -> A single string char doens't need to be simplified.
+        
+        if( isFunction 
+            || priorityIndex > 0 
+            || splitted[index + 1]?.startsWith('.')
+            || strToSympl
+        ) {
             const letter = isFunction ? `(${generateLetter(index)})` : generateLetter(index)
             return before + letter
-        }
-        else if(multipleStartsWith(value, rules.string.openner) && multipleEndsWith(value, rules.string.closer) && splitted[index +1]) {
-            return generateLetter(index)
         }
 
         return value

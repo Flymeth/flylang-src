@@ -1,12 +1,12 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import Number from "./number.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { handleRecursiveSeparate, separate } from "../../utils/tools/separate.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
 import { multipleStartsWith } from "../../utils/tools/extremityTester.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 
 export type BooleanTestReturn = {
     type: "boolean_test",
@@ -34,7 +34,7 @@ export default class BooleanTest extends CompilerObject {
     async parse(position: Positioner): Promise<BooleanTestReturn | null> {
         const symbols = Object.values(rules.boolean_symbols)
         let separated = separate(position, symbols)
-        if(!separated) throw new RaiseFlyLangCompilerError(fastSyntaxError(position)).raise()
+        if(!separated) throw new RaiseCodeError(position, new SyntaxError()).raise()
 
         if(separated.length === 1) {
             position.autoTrim()

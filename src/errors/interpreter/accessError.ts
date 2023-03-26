@@ -1,8 +1,7 @@
-import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class AccessError extends SyntaxError {
-    constructor(position: Positioner, message: string) {
-        super(position, `Cannot access to property. ${message}`)
+export default class AccessError extends Error {
+    constructor(message: string) {
+        super("ACCESS_ERROR", 11, `Cannot access to property. ${message}`)
     }
 }

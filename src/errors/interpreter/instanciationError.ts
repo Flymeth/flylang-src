@@ -1,8 +1,7 @@
-import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class InstanciationError extends SyntaxError {
-    constructor(position: Positioner, message?: string) {
-        super(position, `Cannot instanciate the class. ${message || ""}`)
+export default class InstanciationError extends Error {
+    constructor(message?: string) {
+        super("INST.ERROR", 6, `Cannot instanciate the class. ${message || ""}`)
     }
 }

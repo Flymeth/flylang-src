@@ -2,10 +2,10 @@ import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import CompilerObject from "./_object.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 
 export type DictObjectReturn = {
     type: "object",
@@ -52,13 +52,13 @@ export default class DictObject extends CompilerObject {
                         value.start++; return value.split()
                     })()
                 ] : safeSplit(value, [":"], false, 1)
-                if(!splittedVal) throw new RaiseFlyLangCompilerError(fastSyntaxError(value, "Invalid object syntax.")).raise()
+                if(!splittedVal) throw new RaiseCodeError(value, new SyntaxError("Invalid object syntax.")).raise()
                 
                 const [key, val] = splittedVal.map(e => e?.split().autoTrim(rules.trim_chars.concat(",")))
-                if(!val) throw new RaiseFlyLangCompilerError(fastSyntaxError(value, "This is not a valid object value.")).raise()
+                if(!val) throw new RaiseCodeError(value, new SyntaxError("This is not a valid object value.")).raise()
                 
                 const parsedVal = await FlyLang.parse(this.data, val, variableAcceptedObjects(this.data))
-                if(!parsedVal) throw new RaiseFlyLangCompilerError(fastSyntaxError(val, "Invalid object syntax.")).raise()
+                if(!parsedVal) throw new RaiseCodeError(val, new SyntaxError("Invalid object syntax.")).raise()
     
                 items.push({
                     key: key?.now.trim() || val.now.trim(),

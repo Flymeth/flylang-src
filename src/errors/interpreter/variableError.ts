@@ -1,8 +1,8 @@
 import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class VariableError extends SyntaxError {
-    constructor(variable: Positioner, message: string) {
-        super(variable, `Cannot find variable. ${message}`)
+export default class VariableError extends Error {
+    constructor(message: string) {
+        super("UNFOUND_VARIABLE", 4, `Cannot find variable. ${message}`)
     }
 }

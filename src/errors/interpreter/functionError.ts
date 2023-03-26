@@ -1,8 +1,7 @@
-import Positioner from "../../utils/positioner.js";
-import SyntaxError from "../code/SyntaxError.js";
+import Error from "../_error.js";
 
-export default class FunctionError extends SyntaxError {
-    constructor(position: Positioner, message: string) {
-        super(position, `Unable to execute correcly this function. ${message}`)
+export default class FunctionError extends Error {
+    constructor(message: string) {
+        super("FUNCTION_ERROR", 8, `Unable to execute correcly this function. ${message}`)
     }
 }

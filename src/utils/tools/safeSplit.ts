@@ -1,13 +1,9 @@
 import { langRules as rules } from "../registeries.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import { multipleEndsWith, multipleStartsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { considerAsAChar, numberOfCharEnding } from "../../interpreter/stringify.js";
-
-export function createSplitError(position: Positioner) {
-    return fastSyntaxError(position, `Unclosed block.`)
-}
+import { considerAsAChar } from "../../interpreter/stringify.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SplitError from "../../errors/code/splitError.js";
 
 type deepObject = {
     object: number,
@@ -100,7 +96,7 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
             }
         }
 
-        if(deep.insideBlock()) throw new RaiseFlyLangCompilerError(createSplitError(position)).raise()
+        if(deep.insideBlock()) throw new RaiseCodeError(position, new SplitError()).raise()
         const value = position.split()
         if(foundSplitter && !keepSplitter) value.end-= foundSplitter.length
         splitted.push(value)

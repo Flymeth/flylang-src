@@ -3,6 +3,7 @@ import safeSplit from "../../utils/tools/safeSplit.js"
 import Parser, { ParsableObjectList, ParserClassData, ParserReturn } from "../parser.js"
 import CompilerObject, { ObjectRegexpsType } from "./_object.js"
 import FunctionAsignation, { FunctionAsignationReturn } from "./function_asignation.js"
+import Stopper from "./stoppers.js"
 
 
 export type TryStatementReturn = {
@@ -30,7 +31,8 @@ export default class TryStatement extends CompilerObject {
         if(!tryCode) return null
         tryCode.start++
         tryCode.autoTrim()
-
+        
+        this.data.objects.push(new Stopper(this.data, ["block_pass"]))
         const parser = new Parser({type: "manualy", data: this.data})
         const tryResult = await parser.compile(tryCode.split())
         if(!tryResult) return null

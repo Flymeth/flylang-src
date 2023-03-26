@@ -4,45 +4,48 @@
       LITTERAL: true
     #strict_value
   EXECUTION: 
-    #TRY_STATEMENT
-      TRYING: 
-        #ATTRIBUTE_ACCESS
-          ORIGIN: 
-            #VARIABLE
-              NAME: std
-            #variable
-          ACCESS:
-            INDEX_VALUE: 
-              #FUNCTION_CALL
-                FUNCTION: out
-                ARGUMENTS: 
-                  #STRING
-                    CONTENT:
-                      "hello"
-                  #string
-              #function_call
-        #attribute_access
-      IF FAILURE [HANDLE ERROR IN "<without>"]: 
-        #ATTRIBUTE_ACCESS
-          ORIGIN: 
-            #VARIABLE
-              NAME: std
-            #variable
-          ACCESS:
-            INDEX_VALUE: 
-              #FUNCTION_CALL
-                FUNCTION: out
-                ARGUMENTS: 
-                  #STRING
-                    CONTENT:
-                      "GoodBye!"
-                  #string
-              #function_call
-        #attribute_access
-    #try_statement
-  ELSE: 
     #IF_STATEMENT
-      
+      CONDITION: 
+        #COMPARAISON
+          TYPE: egual
+          COMPARATOR 1: 
+            #NUMBER
+              VALUE: 3
+            #number
+          COMPARATOR 2: 
+            #NUMBER
+              VALUE: 3
+            #number
+        #comparaison
+      EXECUTION: 
+        #IF_STATEMENT
+          CONDITION: 
+            #NUMBER
+              VALUE: 1
+            #number
+          EXECUTION: 
+            #ATTRIBUTE_ACCESS
+              ORIGIN: 
+                #VARIABLE
+                  NAME: std
+                #variable
+              ACCESS:
+                INDEX_VALUE: 
+                  #FUNCTION_CALL
+                    FUNCTION: out
+                    ARGUMENTS: 
+                      #STRING
+                        CONTENT:
+                          "Must pass!"
+                      #string
+                  #function_call
+            #attribute_access
+
+            #STOPPER
+              TYPE: block_pass
+            #stopper
+        #if_statement
+
         #ATTRIBUTE_ACCESS
           ORIGIN: 
             #VARIABLE
@@ -55,9 +58,26 @@
                 ARGUMENTS: 
                   #STRING
                     CONTENT:
-                      "If is false!"
+                      "Not passed!"
                   #string
               #function_call
         #attribute_access
     #if_statement
+
+    #ATTRIBUTE_ACCESS
+      ORIGIN: 
+        #VARIABLE
+          NAME: std
+        #variable
+      ACCESS:
+        INDEX_VALUE: 
+          #FUNCTION_CALL
+            FUNCTION: out
+            ARGUMENTS: 
+              #STRING
+                CONTENT:
+                  "Must be show"
+              #string
+          #function_call
+    #attribute_access
 #if_statement

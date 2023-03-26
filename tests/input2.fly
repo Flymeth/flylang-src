@@ -1,5 +1,4 @@
 a: true
 fn e(
-
     std.out("hello", a)
 )

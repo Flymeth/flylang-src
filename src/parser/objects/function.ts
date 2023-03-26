@@ -1,12 +1,12 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
-import Error from "../../errors/_error.js";
 import SyntaxError from "../../errors/code/SyntaxError.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { variableAcceptedObjects } from "../../utils/registeries.js";
-import safeSplit, { createSplitError } from "../../utils/tools/safeSplit.js";
+import safeSplit from "../../utils/tools/safeSplit.js";
 import CompilerObject from "./_object.js";
 import Variable from "./variable.js";
 import Positioner from "../../utils/positioner.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SplitError from "../../errors/code/splitError.js";
 
 export type FunctionCallReturn = {
     type: "function_call",
@@ -35,12 +35,12 @@ export default class FunctionCall extends CompilerObject {
 
         const argsPosition = code.take(args)
         const splitedArgs = safeSplit(argsPosition.split(), [","], false, undefined)
-        if(!splitedArgs) throw new RaiseFlyLangCompilerError(createSplitError(argsPosition)).raise()
+        if(!splitedArgs) throw new RaiseCodeError(argsPosition, new SplitError()).raise()
         
         const parsedArgs= await Promise.all(
             splitedArgs.map(async value => {
                 const parsed = await FlyLang.parse(this.data, value, variableAcceptedObjects(this.data))
-                if(!parsed) throw new RaiseFlyLangCompilerError(new SyntaxError(value, "Invalid argument(s) were given")).raise()
+                if(!parsed) throw new RaiseCodeError(value, new SyntaxError("Invalid argument(s) were given")).raise()
                 
                 return parsed
             })

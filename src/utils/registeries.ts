@@ -39,7 +39,7 @@ export function exportableObjects(data: ParserClassData) {
 export type exportableObjects = (VariableAsignationReturn | FunctionAsignationReturn | ClassConstrReturn) & ParsableObjectInformations
 export const exportableObjectsName: ParsableObjectList["type"][] = ["variable_asignation", "function_asignation", "class_constructor"]
 export type needParseBeforeInterpret = (ArrayReturn | DictObjectReturn | AttrAccessReturn | ComparaisonReturn | OperationReturn | StringReturn) & ParsableObjectInformations
-export const needParseBeforeInterpretName: ParsableObjectList["type"][] = ["array", "object", "attribute_access", "comparaison", "operation", "string", "class_instanciation", "number", "boolean_test"]
+export const needParseBeforeInterpretName: ParsableObjectList["type"][] = ["array", "object", "attribute_access", "comparaison", "operation", "string", "class_instanciation", "number", "boolean_test", "if_statement"]
 export const ErrorHandle = {
     codeErrors: {
         default: Error,

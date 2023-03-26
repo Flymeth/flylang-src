@@ -7,17 +7,14 @@ import RaiseFlyLangCompilerError from './errors/raiseError.js'
 import ArgError from './errors/compiler/ArgumentError.js'
 import Interpreter from './interpreter/interpreter.js'
 import accessToDoc from './doc.js'
-
-const binMode = "pkg" in process
-const [nodePath, thisPath, ...inputArgs] = process.argv
-
-const args = new Arguments(inputArgs)
-const properties = new DotProperties(join(binMode ? dirname(process.execPath) : __dirname, "../assets/flylang.properties"))
+import {args, properties} from "./utils/input_infos.js"
 
 const flyLangFilePath = args.getArgument(0)
 const flyLangOutPath = args.getArgument(1)
 
 !(async () => {
+    if(process.argv[1] !== __filename) return
+    
     process.title = "FlyLang"
     
     const parser = new FlyLang({

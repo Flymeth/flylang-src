@@ -2,12 +2,13 @@ import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
 import CompilerObject from "./_object.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import { handleRecursiveSeparate, separate } from "../../utils/tools/separate.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import Number from "./number.js";
 import CompilerError from "../../errors/compiler/CompilerError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
+import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 
 const validOperations = rules.operations
 const validFastOperations = validOperations.filter(({symbol}) => ["+", "-"].indexOf(symbol) >= 0)
@@ -36,13 +37,13 @@ export default class Operation extends CompilerObject {
         if(separated?.length === 1 && separated[0] instanceof Positioner) { // -val; +val
             const [sign, ...data] = separated[0].now
             const thisFastOperation = validFastOperations.find(op => op.symbol === sign)
-            if(!thisFastOperation) throw new RaiseFlyLangCompilerError(fastSyntaxError(separated[0], `Invalid syntax. The 'fast operation' can only be ${validFastOperations.map(e => `"${e.symbol}variable"`).join(' or ')}.`))
+            if(!thisFastOperation) throw new RaiseCodeError(separated[0], new SyntaxError(`Invalid syntax. The 'fast operation' can only be ${validFastOperations.map(e => `"${e.symbol}variable"`).join(' or ')}.`)).raise()
 
             const parsedNumber = await new Number(this.data).parse(new Positioner("0"))
             if(!parsedNumber) throw new RaiseFlyLangCompilerError(new CompilerError()).raise()
 
             const parsedData = await FlyLang.parse(this.data, code.take(data.join('')), variableAcceptedObjects(this.data))
-            if(!parsedData) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Operand is invalid.")).raise()
+            if(!parsedData) throw new RaiseCodeError(code, new SyntaxError("Operand is invalid.")).raise()
 
             return {
                 type: "operation",
@@ -58,7 +59,7 @@ export default class Operation extends CompilerObject {
 
         const parsed = separated && await handleRecursiveSeparate<OperationReturn>(separated, async (symbol, before, after) => {
             const operation: typeof rules.operations[number] | undefined = validOperations.find(e => e.symbol === symbol.now)
-            if(!operation) throw new RaiseFlyLangCompilerError(fastSyntaxError(symbol, "Operator isn't valid."))
+            if(!operation) throw new RaiseCodeError(symbol, new SyntaxError("Operator isn't valid."))
 
             const objects = variableAcceptedObjects(this.data)
 
@@ -67,7 +68,7 @@ export default class Operation extends CompilerObject {
                 ? await FlyLang.parse(this.data, before, objects)
                 : before
             )
-            if(!op1) throw new RaiseFlyLangCompilerError(fastSyntaxError(before instanceof Positioner ? before : code, "Operand is invalid.")).raise()
+            if(!op1) throw new RaiseCodeError(before instanceof Positioner ? before : code, new SyntaxError("Operand is invalid.")).raise()
             
             const op2 = (
                 after instanceof Positioner
@@ -75,7 +76,7 @@ export default class Operation extends CompilerObject {
                 : after
             )
             
-            if(!op2) throw new RaiseFlyLangCompilerError(fastSyntaxError(after instanceof Positioner ? after : code, "Operand is invalid.")).raise()
+            if(!op2) throw new RaiseCodeError(after instanceof Positioner ? after : code, new SyntaxError("Operand is invalid.")).raise()
             
             return {
                 type: "operation",
@@ -86,7 +87,7 @@ export default class Operation extends CompilerObject {
             }
         }, operations)
         
-        if(!parsed) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Invalid operation.")).raise()
+        if(!parsed) throw new RaiseCodeError(code, new SyntaxError("Invalid operation.")).raise()
         return parsed
     }
 }

@@ -1,5 +1,5 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
-import SyntaxError, { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
 import CompilerObject from "./_object.js";
@@ -12,6 +12,7 @@ import Array, { ArrayReturn } from "./array.js";
 import Variable, { VariableReturn } from "./variable.js";
 import AttrAccess, { AttrAccessReturn } from "./attr_access.js";
 import NameError from "../../errors/code/NameError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 
 const operationsString = rules.operations.map(e => e.symbol)
 export type VariableNameType = VariableReturn | ArrayReturn | AttrAccessReturn
@@ -45,23 +46,23 @@ export default class VariableAsignation extends CompilerObject {
         const isConstant = !!details.groups.constant
         if(isConstant) value.start++
 
-        if(isConstant && operation) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Cannot perfom operation to a constant variable declaration.")).raise()
+        if(isConstant && operation) throw new RaiseCodeError(code, new SyntaxError("Cannot perfom operation to a constant variable declaration.")).raise()
         
         const parsedName = await FlyLang.parse(this.data, name, [
             new Variable(this.data), new Array(this.data, [new Variable(this.data)]), new AttrAccess(this.data)
         ]) as VariableNameType | null
-        if(!parsedName) throw new RaiseFlyLangCompilerError(fastSyntaxError(code, "Can only set a variable to a variable name or an object's attribute.")).raise()
+        if(!parsedName) throw new RaiseCodeError(code, new SyntaxError("Can only set a variable to a variable name or an object's attribute.")).raise()
         if(
             parsedName.type === "variable" && rules.keywords.find(w => w === parsedName.data.name)
             || parsedName.type === "array" && (
                 parsedName.data.values.find(v => v.type === "variable" && rules.keywords.find(w => w === v.data.name))
             )
-        ) throw new RaiseFlyLangCompilerError(new NameError(name, name.now)).raise()
+        ) throw new RaiseCodeError(name, new NameError(name.now)).raise()
 
         const value_code = operation ? new Positioner(`${name.now}${operation}${value.now}`, code) : value
 
         const parsedValue = await FlyLang.parse(this.data, value_code, [new VariableAsignation(this.data), ...variableAcceptedObjects(this.data).filter(obj => !(obj instanceof FunctionAsignation))])
-        if(!parsedValue) new RaiseFlyLangCompilerError(new SyntaxError(value_code)).raise()
+        if(!parsedValue) new RaiseCodeError(value_code, new SyntaxError()).raise()
         
         return {
             type: "variable_asignation",

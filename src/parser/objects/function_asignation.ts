@@ -4,9 +4,10 @@ import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import CompilerObject from "./_object.js";
 import Stopper from "./stoppers.js";
 import Positioner from "../../utils/positioner.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 import { langRules } from "../../utils/registeries.js";
 import NameError from "../../errors/code/NameError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 
 export type FunctionAsignationReturn = {
     type: "function_asignation",
@@ -36,7 +37,7 @@ export default class FunctionAsignation extends CompilerObject {
                 args= details.groups.args, // Need to be parsed
                 fct_code= details.groups.code // Need to be parsed
         ;
-        if(!this.allowKeywordsNaming && langRules.keywords.find(w => w === name)) throw new RaiseFlyLangCompilerError(new NameError(code.take(name), name)).raise()
+        if(!this.allowKeywordsNaming && langRules.keywords.find(w => w === name)) throw new RaiseCodeError(code.take(name), new NameError(name)).raise()
 
         const args_array: Positioner[] = []
         if(args) {
@@ -50,7 +51,7 @@ export default class FunctionAsignation extends CompilerObject {
                 argPosition.end+= value.length
 
                 if(/[^\s\d]\w*/.test(value)) args_array.push(argPosition.split().autoTrim())
-                else throw new RaiseFlyLangCompilerError(fastSyntaxError(argPosition, "Invalid argument.")).raise()
+                else throw new RaiseCodeError(argPosition, new SyntaxError("Invalid argument.")).raise()
 
                 argPosition.start+= value.length +1 // +1 for the "," character
             }

@@ -3,8 +3,9 @@ import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import CompilerObject from "./_object.js";
 import { handleRecursiveSeparate, separate } from "../../utils/tools/separate.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
-import { fastSyntaxError } from "../../errors/code/SyntaxError.js";
+import SyntaxError from "../../errors/code/SyntaxError.js";
 import Positioner from "../../utils/positioner.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
 
 type CompKeysType = keyof (typeof rules.comparaisons)
 export type ComparaisonReturn = {
@@ -33,7 +34,7 @@ export default class Comparaison extends CompilerObject {
         const comparators = Object.values(rules.comparaisons)
         comparators.unshift(...comparators.map(char => rules.invertion_char + char))
         const separated = separate(code, comparators)
-        if(!separated) throw new RaiseFlyLangCompilerError(fastSyntaxError(code)).raise()
+        if(!separated) throw new RaiseCodeError(code, new SyntaxError()).raise()
         
         return await handleRecursiveSeparate<ComparaisonReturn>(separated, async (comparator, operand1, operand2) => {
             const op1 = (
