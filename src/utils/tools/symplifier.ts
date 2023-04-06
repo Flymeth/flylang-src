@@ -3,6 +3,7 @@ import { langRules as rules } from "../registeries.js";
 import { multipleEndsWith, multipleSearch, multipleStartsWith } from "./extremityTester.js";
 import Positioner from "../positioner.js";
 import { CommentaryRegexps } from "../../parser/objects/comment.js";
+import {allowErrors, setAllowErrors} from "../../errors/raiseError.js";
 
 const letters = "abcdefghijklmnopqrstuvwxyz"
 function generateLetter(itemIndex: number): string {
@@ -23,24 +24,33 @@ function splitAndRemoveUselessPriorities(code: string, prioritiesCloser= rules.b
 function simplifyPriorities(code: string): string[] | null {
     const symplifies_end = [...rules.block.closer, ...rules.objects.closer, ...rules.string.openner]
     const symplifies_start= [...rules.block.openner, ...rules.objects.openner, ...rules.string.closer]
+    
+    const resetAllowErrors = allowErrors
+    setAllowErrors(false)
     const splitted = splitAndRemoveUselessPriorities(code, symplifies_end)
     if(!splitted) return null
-
-    return splitted.map((value, index) => {
+    
+    const result= splitted.map((value, index) => {
         const closer = multipleEndsWith(value, symplifies_end)
         if(!closer) return value
         const openner = symplifies_start[symplifies_end.indexOf(closer)]
         const priorityIndex = multipleSearch(value, [openner])
 
         const before = value.slice(0, priorityIndex)
-        //? For things like "if(...,)"
-        if(rules.keywords.find(key => before === key)) return value
 
         const isFunction = !rules.string.closer.includes(closer) && before && multipleEndsWith(before, [/[a-z]\w*\s*/i])
-        const strToSympl = rules.string.closer.includes(closer) && multipleStartsWith(value, rules.string.openner) === openner && splitted[index +1] // "&& if there is something else" -> A single string char doens't need to be simplified.
+        if(isFunction) {
+            const args = value.slice(priorityIndex +1, value.length)
+            let splittedArgs: Positioner[] = []
+            try {
+                splittedArgs = safeSplit(new Positioner(args), [","])
+            } catch (_) { }
+
+            return `${before}(${splittedArgs.map((_, i) => generateLetter(index + i)).join(',')})`
+        }
         
-        if( isFunction 
-            || priorityIndex > 0 
+        const strToSympl = rules.string.closer.includes(closer) && multipleStartsWith(value, rules.string.openner) === openner && splitted[index +1] // "&& if there is something else" -> A single string char doens't need to be simplified.
+        if( priorityIndex > 0 
             || splitted[index + 1]?.startsWith('.')
             || strToSympl
         ) {
@@ -50,6 +60,9 @@ function simplifyPriorities(code: string): string[] | null {
 
         return value
     })
+
+    setAllowErrors(resetAllowErrors)
+    return result
 }
 /**
  * This function simplifies the top-level priorities in the given code into simple letters like "a", "b", "aa", ...

@@ -19,8 +19,8 @@ export type AttrAccessReturn = {
     }
 }
 export const AttrAccessRegExps = {
-    fast: new RegExp(`.+(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is'),
-    detailed: new RegExp(`(?<origin>.+)(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\(\\w*\\))?)+`, 'is')
+    fast: new RegExp(`\\w+(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\((?:\\w+|,)*\\))?)+`, 'is'),
+    detailed: new RegExp(`(?<origin>\\w+)(?:\\s*\\${rules.attribute_access_char}\\s*[+-]?\\w+(?:\\s*\\((?:\\w+|,)*\\))?)+`, 'is')
 }
 export default class AttrAccess extends CompilerObject {
     constructor(data: ParserClassData) {
@@ -33,7 +33,7 @@ export default class AttrAccess extends CompilerObject {
 
         const access: AttrAccessReturn["data"]["access"] = []
         for await(const pos of data) {
-            const obj = await Parser.parse(this.data, pos, variableAcceptedObjects(this.data))
+            const obj = await Parser.parse(this.data, pos, variableAcceptedObjects(this.data, true))
             if(!obj) throw new RaiseCodeError(pos,  new SyntaxError("Invalid syntax for accessing to an attribute.")).raise()
             
             let fromScriptTester = pos.global.trim()

@@ -62,8 +62,8 @@ function stringify(data: ParsedObject, defaultIndent= 0): (string | null)[] {
         case "loop": {
             if(data.data.type === "for") return [
                 `TYPE: FOR`,
-                `ITERATOR: ${exec(data.data.iterator)}`,
-                `EXECUTION: ${exec(data.data.executor)}`
+                `ITERATOR: ${exec(data.data.iterator.getter)}`,
+                `EXECUTION: ${[data.data.iterator.value || "", data.data.iterator.index || ""].join(', ')}: ${mapExec(data.data.executor)}`
             ]
             else return [
                 `TYPE: ${data.data.type.toUpperCase()}`,
@@ -91,6 +91,7 @@ function stringify(data: ParsedObject, defaultIndent= 0): (string | null)[] {
         case "stopper": {
             return [
                 `TYPE: ${data.data.type}`,
+                `SCOPE: ${Math.abs(data.data.scope) || "This one"}`,
                 data.data.return ? `ENDING_VALUE: ${exec(data.data.return)}` : null
             ]
         }

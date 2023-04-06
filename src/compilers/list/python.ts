@@ -101,6 +101,8 @@ const python: CompilerTypeObject = {
                     const parsedCode = code.map(v => python.exec(v, {...cache, indent: indent + 2})).map(v => '\n  ' + indentation + v)
                     return `while ${(type === "while" ? parsedCond : `not (${parsedCond})`)}: ${parsedCode.join('')}`
                 }else if(type === "for") {
+                    return "TODO"
+                    /*
                     const {iterator, executor} = data.data
                     const parsedIterator = python.exec(iterator, cache)
 
@@ -118,7 +120,7 @@ const python: CompilerTypeObject = {
                             : "pass"
                         }` :
                         python.exec(executor, cache)
-                    )}`
+                    )}`*/
                 }
                 return '""" >> INVALID LOOP HERE << """'
             }

@@ -1,83 +1,52 @@
-#IF_STATEMENT
-  CONDITION: 
-    #STRICT_VALUE
-      LITTERAL: true
-    #strict_value
-  EXECUTION: 
+#LOOP
+  TYPE: FOR
+  ITERATOR: 
+    #FUNCTION_CALL
+      FUNCTION: range
+      ARGUMENTS: 
+        #NUMBER
+          VALUE: 100
+        #number
+    #function_call
+  EXECUTION: , : 
     #IF_STATEMENT
       CONDITION: 
-        #COMPARAISON
-          TYPE: egual
+        #BOOLEAN_TEST
+          TYPE: or
           COMPARATOR 1: 
-            #NUMBER
-              VALUE: 3
-            #number
-          COMPARATOR 2: 
-            #NUMBER
-              VALUE: 3
-            #number
-        #comparaison
-      EXECUTION: 
-        #IF_STATEMENT
-          CONDITION: 
-            #NUMBER
-              VALUE: 1
-            #number
-          EXECUTION: 
-            #ATTRIBUTE_ACCESS
-              ORIGIN: 
+            #COMPARAISON
+              TYPE: inf_strict
+              COMPARATOR 1: 
                 #VARIABLE
-                  NAME: std
+                  NAME: gen
                 #variable
-              ACCESS:
-                INDEX_VALUE: 
-                  #FUNCTION_CALL
-                    FUNCTION: out
-                    ARGUMENTS: 
-                      #STRING
-                        CONTENT:
-                          "Must pass!"
-                      #string
-                  #function_call
-            #attribute_access
-
-            #STOPPER
-              TYPE: block_pass
-            #stopper
-        #if_statement
-
-        #ATTRIBUTE_ACCESS
-          ORIGIN: 
-            #VARIABLE
-              NAME: std
-            #variable
-          ACCESS:
-            INDEX_VALUE: 
-              #FUNCTION_CALL
-                FUNCTION: out
-                ARGUMENTS: 
-                  #STRING
-                    CONTENT:
-                      "Not passed!"
-                  #string
-              #function_call
-        #attribute_access
+              COMPARATOR 2: 
+                #NUMBER
+                  VALUE: -10
+                #number
+            #comparaison
+          COMPARATOR 2: 
+            #COMPARAISON
+              TYPE: sup_strict
+              COMPARATOR 1: 
+                #VARIABLE
+                  NAME: gen
+                #variable
+              COMPARATOR 2: 
+                #NUMBER
+                  VALUE: 10
+                #number
+            #comparaison
+        #boolean_test
+      EXECUTION: 
+        #STOPPER
+          TYPE: exec_kill
+          SCOPE: This one
+          ENDING_VALUE: 
+            #STRING
+              CONTENT:
+                "erreur!!"
+            #string
+        #stopper
     #if_statement
-
-    #ATTRIBUTE_ACCESS
-      ORIGIN: 
-        #VARIABLE
-          NAME: std
-        #variable
-      ACCESS:
-        INDEX_VALUE: 
-          #FUNCTION_CALL
-            FUNCTION: out
-            ARGUMENTS: 
-              #STRING
-                CONTENT:
-                  "Must be show"
-              #string
-          #function_call
-    #attribute_access
-#if_statement
+#loop

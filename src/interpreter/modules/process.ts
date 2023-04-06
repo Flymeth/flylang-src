@@ -1,11 +1,11 @@
 import BigNumber from "bignumber.js";
-import { cacheInterface } from "../defaultCache"
-import Interpreter, { UNDEFINED_TYPE } from "../interpreter"
-import FunctionError from "../../errors/interpreter/functionError";
-import ExecutionError from "../../errors/interpreter/executionError";
-import importError from "../../errors/interpreter/importError";
-import RaiseCodeError from "../../errors/raiseCodeError";
-import { createStringObj } from "../stringify";
+import { cacheInterface } from "../defaultCache.js"
+import Interpreter, { UNDEFINED_TYPE } from "../interpreter.js"
+import FunctionError from "../../errors/interpreter/functionError.js";
+import ExecutionError from "../../errors/interpreter/executionError.js";
+import importError from "../../errors/interpreter/importError.js";
+import RaiseCodeError from "../../errors/raiseCodeError.js";
+import { createStringObj } from "../stringify.js";
 import processTools from "../../libs/ps.js";
 
 async function genNewProcessObject(nodeProcessPID: number): Promise<cacheInterface["builtin"]["objects"][string] | null> {

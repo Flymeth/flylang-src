@@ -1,0 +1,6 @@
+import random in random
+
+for(range(1000),
+    gen: random.rangedInt(-10, 10)
+    if(gen < -10 ? gen > 10, stop "erreur!!")
+)

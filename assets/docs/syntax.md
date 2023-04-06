@@ -143,9 +143,9 @@ if(<condition>,
 ### For loop
 
 ```doc
-for(<iterable>, fn(value, index,
+for(<iterable>, value?, index?,
     <...>
-))
+)
 ```
 
 ### While loop
@@ -229,3 +229,21 @@ fetch|Fetch a process by its PID|`number`
 name|description|attribute(s)
 ---|---|---
 current|The current process|`pid`; `ppid`; `name`; `kill()`
+
+#### Random
+
+`import process ...`
+This module countain variables/functions tool related to the os processes
+
+##### Random - Variables
+
+name|description
+---|---
+now|The PI value
+
+##### Random - Functions
+
+name|description|argument(s)
+---|---|---
+ranged|Returns a random number between a range of numbers|`number` *2
+rangedInt|Returns a random integer between a range of numbers|`number` *2

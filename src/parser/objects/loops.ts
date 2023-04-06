@@ -1,14 +1,10 @@
 import FlyLang, { ParsableObjectList, ParserReturn, ParserClassData } from "../parser.js";
 import { RegExp_OR } from "../../utils/tools/regExpTools.js";
 import CompilerObject from "./_object.js";
-import FunctionAsignation, { FunctionAsignationReturn } from "./function_asignation.js";
-import FunctionCall, { FunctionCallReturn } from "./function.js"
-import Variable, { VariableReturn } from "./variable.js";
 import safeSplit from "../../utils/tools/safeSplit.js";
 import { variableAcceptedObjects } from "../../utils/registeries.js";
 import Positioner from "../../utils/positioner.js";
 import Stopper from "./stoppers.js";
-import AttrAccess, { AttrAccessReturn } from "./attr_access.js";
 import SyntaxError from "../../errors/code/SyntaxError.js";
 import RaiseCodeError from "../../errors/raiseCodeError.js";
 
@@ -22,14 +18,24 @@ export type LoopsReturn = {
         code: ParserReturn["content"]
     } | {
         type: "for",
-        iterator: ParsableObjectList,
-        executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn | AttrAccessReturn
+        iterator: {
+            getter: ParsableObjectList,
+            /**
+             * The variable's name where the iterator's values will be set
+             */
+            value?: string,
+            /**
+             * The variable's name where the iterator's values' index will be set
+             */
+            index?: string
+        }
+        executor: ParserReturn["content"]
     }
 }
 export default class Loops extends CompilerObject {
     constructor(data: ParserClassData) {
         const typesReg = RegExp_OR(loop_types)
-        super(data, "loop", `while(1, echo("lolilol")); for((1,2,3), fn(i, v, echo(i, v)))`, {
+        super(data, "loop", `while(1, echo("lolilol")); for((1,2,3), i, v, echo(i, v))`, {
             fast: new RegExp(`${typesReg.source}\\s*\\(.+\\)`, "s"),
             detailed: new RegExp(`(?<type>${typesReg.source})\\s*\\((?<inputs>.+)\\)`, "s")
         })
@@ -50,39 +56,48 @@ export default class Loops extends CompilerObject {
         if(!loopType) return null
         
         const input_code = code.take(inputs)
-        const splitted = safeSplit(input_code, [","], false, 1)
+        const splitted = safeSplit(input_code, [","], false)
         
-        if(splitted.length !== 2) throw new RaiseCodeError(input_code, new SyntaxError("Loops must have only 2 arguments. One for the condition, and the other one for the execution.")).raise()
+        if(
+            loopType === "for" && splitted.length > 4
+            || (loopType !== "for" && splitted.length !== 2)
+        ) throw new RaiseCodeError(input_code, new SyntaxError("Loops must have only 2 arguments. One for the condition, and the other one for the execution. (a 'for' loop can has up to for argument, the iterator, the optional value and/or index, and the execution)")).raise()
         
-        this.data.objects.push(new Stopper(this.data, ["loop_breaks"]))
-        const [firstArg, secondArg] = splitted
+        this.data.objects.push(new Stopper(this.data, ["loop_breaks", "block_pass"]))
+        const compiler = new FlyLang({
+            type: "manualy", data: this.data
+        })
+        const [firstArg, ...secondArgs] = splitted
         if(loopType === "for") {
             const iterator = await FlyLang.parse(this.data, firstArg)
             if(!iterator) throw new RaiseCodeError(firstArg, new SyntaxError())
-            
-            //@ts-ignore TS can't understand that is just the given class that will parse the code that I give.
-            const executor: FunctionAsignationReturn | VariableReturn | FunctionCallReturn | null = await FlyLang.parse(this.data, secondArg, [
-                new FunctionAsignation(this.data), new Variable(this.data), new FunctionCall(this.data), new AttrAccess(this.data)
-            ])
-            if(!executor) throw new RaiseCodeError(secondArg, new SyntaxError()).raise()
 
+            const execution = secondArgs.pop()
+            const indexVar = secondArgs.length >= 2 ? secondArgs.pop() : undefined
+            const valueVar = secondArgs.pop()
+            
+            const parsedExecution = execution ? (await compiler.compile(execution))?.content : []
+            if(!parsedExecution) throw new RaiseCodeError(execution || input_code, new SyntaxError())
+            
             return {
                 type: "loop",
                 data: {
                     type: "for",
-                    iterator,
-                    executor
+                    executor: parsedExecution,
+                    iterator: {
+                        getter: iterator,
+                        value: valueVar?.now.trim(),
+                        index: indexVar?.now.trim()
+                    }
                 }
             }
         }else {
             const condition = await FlyLang.parse(this.data, firstArg, variableAcceptedObjects(this.data))
             if(!condition) throw new RaiseCodeError(firstArg, new SyntaxError())
 
-            const compiler = new FlyLang({
-                type: "manualy", data: this.data
-            })
-            const code = await compiler.compile(secondArg)
-            if(!code) throw new RaiseCodeError(secondArg, new SyntaxError())
+            const codeArgs = secondArgs[0]
+            const code = await compiler.compile(codeArgs)
+            if(!code) throw new RaiseCodeError(codeArgs, new SyntaxError())
 
             return {
                 type: "loop",

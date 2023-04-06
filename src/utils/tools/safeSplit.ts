@@ -95,8 +95,11 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
                 }
             }
         }
-
-        if(deep.insideBlock()) throw new RaiseCodeError(position, new SplitError()).raise()
+        
+        if(deep.insideBlock()) {
+            const unclosedType = Object.keys(deep).find((key) => typeof deep[key as keyof typeof deep] === "number" && deep[key as keyof typeof deep])
+            throw new RaiseCodeError(position, new SplitError(unclosedType)).raise()
+        }
         const value = position.split()
         if(foundSplitter && !keepSplitter) value.end-= foundSplitter.length
         splitted.push(value)

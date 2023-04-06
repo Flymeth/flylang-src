@@ -53,6 +53,7 @@ export default class ifStatement extends CompilerObject {
         const closerIndex = block_borns.closer.indexOf(multipleEndsWith(block.now, block_borns.closer) || "")
         if(closerIndex < 0) return null
 
+        
         const openner = block_borns.openner[closerIndex]
         const splitted = safeSplit(
             new Positioner(openner + block.now, block),
@@ -60,7 +61,7 @@ export default class ifStatement extends CompilerObject {
             undefined,
             1
         )
-        
+
         if(!splitted) throw new RaiseCodeError(block, new SplitError()).raise()        
         const executable = splitted.shift()
         if(!executable) throw new RaiseCodeError(block, new SplitError()).raise()        
@@ -121,9 +122,7 @@ export default class ifStatement extends CompilerObject {
         const parsedCondition = await FlyLang.parse(this.data, condition, variableAcceptedObjects(this.data))
         if(!parsedCondition) return null
         
-        const requires_parsing= pos.split()
-        requires_parsing.start = pos.now.indexOf(ifRegRes.groups.requires_parsing)
-        requires_parsing.end= requires_parsing.start + ifRegRes.groups.requires_parsing.length        
+        const requires_parsing= pos.take(ifRegRes.groups.requires_parsing)
         const block = await this.parseBlock(requires_parsing)
         if(!block) throw new RaiseCodeError(requires_parsing, new SyntaxError()).raise()
 

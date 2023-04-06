@@ -1,6 +1,6 @@
 {
   "name": "flylang",
-  "version": "0.0.7-alpha",
+  "version": "0.0.8-alpha",
   "description": "My first programing language compiler",
   "main": "dist/main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "vanilla": "cls && cd dist && node flylang.js",
     "tsbuild": "npx tsc && cls",
     "tsbuild_watch": "npx tsc -w && cls",
-    "binnarize": "npx pkg dist/flylang.js -o bin/flylang -t node18 -c package.json --public -C Brotli --build"
+    "binnarize": "npx pkg dist/flylang.js -o bin/flylang -t node18 -c package.json --public -C Brotli"
   },
   "author": "Flymeth",
   "license": "ISC",
@@ -40,7 +40,6 @@
     "chalk": "4.1.2",
     "marked-terminal": "^5.1.1",
     "ps-list": "7.2.0",
-    "ps-node": "^0.1.6",
     "strip-ansi": "6.0.0"
   }
 }

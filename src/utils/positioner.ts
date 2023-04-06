@@ -48,6 +48,8 @@ export default class Positioner {
                 
                 global: {object: parent.relatives?.global.object || parent, position: positionAsGlobal}
             }
+
+            if(!this.file) this.file = parent.file
         }
     }
 

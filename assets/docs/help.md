@@ -21,7 +21,6 @@ flylang <file in> <file out>.txt --langOutput=debugger [--debugJsonFile=<fichier
 ## In console mode
 
 `In console mode` starts a new shell session where you can input your code directly inside the console.
-This feature is actually in `BETA` so it mights not work.
 To exit the session, simply type `//exit` or press `CTRL` (or `CMD`) + `C`.
 
 ### Commands

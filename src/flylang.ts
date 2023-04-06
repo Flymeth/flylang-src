@@ -1,5 +1,4 @@
-import { Arguments, DotProperties } from './utils/readers.js'
-import { dirname, join } from 'path'
+import { join } from 'path'
 import FlyLang from './parser/parser.js'
 import { writeFileSync } from 'fs'
 import Compiler from './compilers/compiler.js'
@@ -22,8 +21,8 @@ const flyLangOutPath = args.getArgument(1)
         properties, 
         args, 
         path: flyLangFilePath ? {
-            in: join(process.cwd(), flyLangFilePath),
-            out: join(process.cwd(), flyLangOutPath || "")
+            in: /^[a-z]:/i.test(flyLangFilePath) ? flyLangFilePath : join(process.cwd(), flyLangFilePath),
+            out: /^[a-z]:/i.test(flyLangOutPath) ? flyLangOutPath : join(process.cwd(), flyLangOutPath || "")
         } : undefined
     });
 

@@ -1,5 +1,5 @@
 import { dirname, join } from "path"
-import { Arguments, DotProperties } from "./readers"
+import { Arguments, DotProperties } from "./readers.js"
 
 const binMode = "pkg" in process
 const [nodePath, thisPath, ...inputArgs] = process.argv

@@ -14,8 +14,8 @@ export type CommentaryReturn = {
 const opennersReg = RegExp_OR(rules.comments.openner)
 const closerReg = RegExp_OR(rules.comments.closer)
 export const CommentaryRegexps = {
-    fast: new RegExp(`(?:${opennersReg.source}{2}.*?$)|(?:${opennersReg.source}.+?${closerReg.source})`, "m"),
-    detailed: new RegExp(`(?:${opennersReg.source}{2}\\s*(?<inlineContent>.*?)\\s*$)|(?:${opennersReg.source}\\s*(?<blockContent>.+?)\\s*${closerReg.source})`, "m")
+    fast: new RegExp(`(?:${opennersReg.source}{2}.*?$)|(?:${opennersReg.source}(?:.|\\s)+?${closerReg.source})`, "m"),
+    detailed: new RegExp(`(?:${opennersReg.source}{2}\\s*(?<inlineContent>.*?)\\s*$)|(?:${opennersReg.source}\\s*(?<blockContent>(?:.|\\s)+?)\\s*${closerReg.source})`, "m")
 }
 
 export default class Commentary extends CompilerObject {
@@ -26,10 +26,9 @@ export default class Commentary extends CompilerObject {
 
     async parse(code: Positioner): Promise<CommentaryReturn | null> {
         const details = this.regexps.detailed.exec(code.now)
-        
         if(!details) return null
-        const content = details?.groups?.inlineContent || details?.groups?.blockContent
 
+        const content = details?.groups?.inlineContent || details?.groups?.blockContent
         return {
             type: "comment",
             data: {

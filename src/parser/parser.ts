@@ -142,7 +142,7 @@ export default class Parser {
         if(!this.data.file.src.path) return
         const {value, parsed} = this.data.file.src.path
         try {
-            this.data.file.src.content = readFileSync(value, {encoding: 'utf-8'})
+            this.data.file.src.content = readFileSync(value.endsWith('.fly') ? value : `${value}.fly`, {encoding: 'utf-8'})
         } catch (e) {
             new RaiseFlyLangCompilerError(new PathError("Path is not valid!", parsed)).raise()
         }

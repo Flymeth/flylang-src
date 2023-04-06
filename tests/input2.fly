@@ -1,4 +1,1 @@
-a: true
-fn e(
-    std.out("hello", a)
-)
+a.e.b.c

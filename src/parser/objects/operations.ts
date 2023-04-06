@@ -27,7 +27,7 @@ export default class Operation extends CompilerObject {
             detailed: new RegExp(`(?:.*?(?<!\\${rules.attribute_access_char}\\s*)${operationReg.source}.+)+`)
         })
         
-        this.bonus_score-= 2
+        this.bonus_score-= 3
     }
 
     async parse(code: Positioner): Promise<OperationReturn | null> {

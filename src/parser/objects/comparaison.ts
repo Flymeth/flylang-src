@@ -1,5 +1,4 @@
 import FlyLang, { ParsableObjectList, ParserClassData } from "../parser.js";
-import RaiseFlyLangCompilerError from "../../errors/raiseError.js";
 import CompilerObject from "./_object.js";
 import { handleRecursiveSeparate, separate } from "../../utils/tools/separate.js";
 import { variableAcceptedObjects, langRules as rules } from "../../utils/registeries.js";
@@ -27,7 +26,7 @@ export default class Comparaison extends CompilerObject {
             detailed: new RegExp(`(?<operator1>.+?)\\s*(?<invert>${rules.invertion_char})?\\s*(?<type>${comp_symbols.map(char => `(?:${char})`).join("|")})\\s*(?<operator2>.+)`, 's')
         })
 
-        this.bonus_score-= 2
+        this.bonus_score-= 3
     }
 
     async parse(code: Positioner): Promise<ComparaisonReturn | null> {

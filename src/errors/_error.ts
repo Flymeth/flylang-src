@@ -11,6 +11,7 @@ export default class Error {
     }
     
     toString() {
-        return `${chalk.gray(`[${this.data.type}]>`)} ${chalk.underline(chalk.bold(chalk.red(this.data.name)))}\n${chalk.italic(this.data.customMessage?.split('\n').map(msg => `> ${msg}`).join('\n') || "")}`
+        const customMessages = this.data.customMessage?.split('\n').filter(m => m.trim()).map(msg => `> ${msg}`).join('\n') || ""
+        return `${chalk.gray(`[${this.data.type}]>`)} ${chalk.underline(chalk.bold(chalk.red(this.data.name))) + (customMessages ? `\n${chalk.italic(customMessages)}` : "")}`
     }
 }

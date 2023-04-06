@@ -2,272 +2,168 @@
   "origin": {
     "file": {
       "path": "C:\\Users\\johan\\OneDrive\\Documents\\.perso\\Dev\\Files\\Languages\\FlyLang\\tests\\input.fly",
-      "content": "if(true,\r\n    if(3=3,\r\n        if(1,\r\n            std.out(\"Must pass!\")\r\n            pass\r\n        )\r\n        std.out(\"Not passed!\")\r\n    )\r\n    std.out(\"Must be show\")\r\n)"
+      "content": "for(range(100), \r\n    if(gen < -10 ? gen > 10, stop \"erreur!!\")\r\n)"
     }
   },
   "content": [
     {
-      "type": "if_statement",
+      "type": "loop",
       "data": {
-        "type": "if",
-        "condition": {
-          "type": "strict_value",
-          "data": {
-            "value": true
-          },
-          "map": [
-            0,
-            171
-          ]
-        },
-        "code": [
+        "type": "for",
+        "executor": [
           {
             "type": "if_statement",
             "data": {
               "type": "if",
               "condition": {
-                "type": "comparaison",
+                "type": "boolean_test",
                 "data": {
-                  "comparaison": {
-                    "name": "egual",
-                    "invert": false
-                  },
-                  "operators": [
+                  "test": "or",
+                  "testers": [
                     {
-                      "type": "number",
+                      "type": "comparaison",
                       "data": {
-                        "type": "integer",
-                        "negative": false,
-                        "number": "3"
+                        "comparaison": {
+                          "name": "inf_strict",
+                          "invert": false
+                        },
+                        "operators": [
+                          {
+                            "type": "variable",
+                            "data": {
+                              "name": "gen"
+                            },
+                            "map": [
+                              25,
+                              29
+                            ]
+                          },
+                          {
+                            "type": "number",
+                            "data": {
+                              "type": "integer",
+                              "negative": true,
+                              "number": "-10"
+                            },
+                            "map": [
+                              30,
+                              34
+                            ]
+                          }
+                        ]
                       },
                       "map": [
-                        3,
-                        4
+                        25,
+                        35
                       ]
                     },
                     {
-                      "type": "number",
+                      "type": "comparaison",
                       "data": {
-                        "type": "integer",
-                        "negative": false,
-                        "number": "3"
+                        "comparaison": {
+                          "name": "sup_strict",
+                          "invert": false
+                        },
+                        "operators": [
+                          {
+                            "type": "variable",
+                            "data": {
+                              "name": "gen"
+                            },
+                            "map": [
+                              37,
+                              41
+                            ]
+                          },
+                          {
+                            "type": "number",
+                            "data": {
+                              "type": "integer",
+                              "negative": false,
+                              "number": "10"
+                            },
+                            "map": [
+                              42,
+                              45
+                            ]
+                          }
+                        ]
                       },
                       "map": [
-                        3,
-                        4
+                        36,
+                        45
                       ]
                     }
                   ]
                 },
                 "map": [
-                  0,
-                  125
+                  22,
+                  63
                 ]
               },
               "code": [
                 {
-                  "type": "if_statement",
+                  "type": "stopper",
                   "data": {
-                    "type": "if",
-                    "condition": {
-                      "type": "number",
-                      "data": {
-                        "type": "integer",
-                        "negative": false,
-                        "number": "1"
-                      },
-                      "map": [
-                        0,
-                        69
-                      ]
-                    },
-                    "code": [
-                      {
-                        "type": "attribute_access",
-                        "data": {
-                          "origin": {
-                            "fromScript": false,
-                            "object": {
-                              "type": "variable",
-                              "data": {
-                                "name": "std"
-                              },
-                              "map": [
-                                0,
-                                4
-                              ]
-                            }
-                          },
-                          "access": [
-                            {
-                              "fromScript": false,
-                              "object": {
-                                "type": "function_call",
-                                "data": {
-                                  "name": "out",
-                                  "arguments": [
-                                    {
-                                      "type": "string",
-                                      "data": [
-                                        {
-                                          "type": "text",
-                                          "data": "Must pass!"
-                                        }
-                                      ],
-                                      "map": [
-                                        8,
-                                        20
-                                      ]
-                                    }
-                                  ]
-                                },
-                                "map": [
-                                  4,
-                                  21
-                                ]
-                              }
-                            }
-                          ]
-                        },
-                        "map": [
-                          0,
-                          21
-                        ]
-                      },
-                      {
-                        "type": "stopper",
-                        "data": {
-                          "type": "block_pass",
-                          "return": null
-                        },
-                        "map": [
-                          35,
-                          39
-                        ]
-                      }
-                    ]
-                  },
-                  "map": [
-                    0,
-                    69
-                  ]
-                },
-                {
-                  "type": "attribute_access",
-                  "data": {
-                    "origin": {
-                      "fromScript": false,
-                      "object": {
-                        "type": "variable",
-                        "data": {
-                          "name": "std"
-                        },
-                        "map": [
-                          79,
-                          83
-                        ]
-                      }
-                    },
-                    "access": [
-                      {
-                        "fromScript": false,
-                        "object": {
-                          "type": "function_call",
-                          "data": {
-                            "name": "out",
-                            "arguments": [
-                              {
-                                "type": "string",
-                                "data": [
-                                  {
-                                    "type": "text",
-                                    "data": "Not passed!"
-                                  }
-                                ],
-                                "map": [
-                                  87,
-                                  100
-                                ]
-                              }
-                            ]
-                          },
-                          "map": [
-                            83,
-                            101
-                          ]
-                        }
-                      }
-                    ]
-                  },
-                  "map": [
-                    79,
-                    101
-                  ]
-                }
-              ]
-            },
-            "map": [
-              0,
-              125
-            ]
-          },
-          {
-            "type": "attribute_access",
-            "data": {
-              "origin": {
-                "fromScript": false,
-                "object": {
-                  "type": "variable",
-                  "data": {
-                    "name": "std"
-                  },
-                  "map": [
-                    131,
-                    135
-                  ]
-                }
-              },
-              "access": [
-                {
-                  "fromScript": false,
-                  "object": {
-                    "type": "function_call",
-                    "data": {
-                      "name": "out",
-                      "arguments": [
+                    "type": "exec_kill",
+                    "scope": 0,
+                    "return": {
+                      "type": "string",
+                      "data": [
                         {
-                          "type": "string",
-                          "data": [
-                            {
-                              "type": "text",
-                              "data": "Must be show"
-                            }
-                          ],
-                          "map": [
-                            139,
-                            153
-                          ]
+                          "type": "text",
+                          "data": "erreur!!"
                         }
+                      ],
+                      "map": [
+                        52,
+                        62
                       ]
-                    },
-                    "map": [
-                      135,
-                      154
-                    ]
-                  }
+                    }
+                  },
+                  "map": [
+                    47,
+                    62
+                  ]
                 }
               ]
             },
             "map": [
-              131,
-              154
+              22,
+              63
             ]
           }
-        ]
+        ],
+        "iterator": {
+          "getter": {
+            "type": "function_call",
+            "data": {
+              "name": "range",
+              "arguments": [
+                {
+                  "type": "number",
+                  "data": {
+                    "type": "integer",
+                    "negative": false,
+                    "number": "100"
+                  },
+                  "map": [
+                    10,
+                    13
+                  ]
+                }
+              ]
+            },
+            "map": [
+              4,
+              15
+            ]
+          }
+        }
       },
       "map": [
         0,
-        171
+        66
       ]
     }
   ]

@@ -25,7 +25,7 @@ export type cacheInterface = {
          * @key value - The value of this variable (like another variable, a function call, ...)
          * @key default - If the value is not accecible, take this instead.
          */
-        variables: {[key: string]: {editable: boolean, value: ParsableObjectList, default?: ParsableObjectList}},
+        variables: {[key: string]: {editable: boolean, value: ParsableObjectList, default?: ParsableObjectList, id?: number}},
         functions: {[key: string]: FunctionAsignationReturn["data"]},
         objects: {[key: string]: {data: cacheInterface["registered"], class: ClassConstrReturn["data"], id: number}}
     },
@@ -213,6 +213,9 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     async asStr(nb, ..._) {
                         return {type: "string", data: [{type: "text", data: nb.number.toFixed()}]}
                     },
+                    async parseInt(nb) {
+                        return {type: "number", data: {negative: nb.negative, type: "integer", number: nb.number.integerValue()}}
+                    }
                 }
             },
             object: {
@@ -246,6 +249,19 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                         if(parsed.isNaN()) return UNDEFINED_TYPE
                         
                         return {type: "number", data: {number: parsed, negative: parsed.isNegative(), type: parsed.isInteger() ? "integer" : "float"}}
+                    },
+                    async split(strings, splitter, max, ..._) {
+                        if(!splitter) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("The 'splitter' argument is missing!"))
+                        splitter= await interpMethods.eval(splitter)
+                        max = max && await interpMethods.eval(max) || UNDEFINED_TYPE
+                        if(splitter.type !== "string" || (max.type !== "number" && (max.type !== "strict_value" || max.data.value !== null))) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Invalid arguments has been provided.")).raise()
+                        const arr: ArrayReturn = {type: "array", data: {values: []}}
+                        const stringData = stringify({type: "string", data: strings}, false)
+                        const splitterData = stringify(splitter)
+                        const splitted = stringData.split(splitterData, max.type === "number" ? max.data.number.toNumber() : undefined)
+                        
+                        arr.data.values = splitted.map(v => createStringObj(v))
+                        return arr
                     }
                 }
             }
