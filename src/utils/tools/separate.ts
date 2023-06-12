@@ -21,9 +21,10 @@ export function separate(position: Positioner, separators: string[] = rules.end_
     if(!splitted) return null
 
     const res: Positioner[] = []
-    for(const pos of splitted) {
+    for(const pos of splitted.filter(pos => pos.now.trim())) {
         const endChar = multipleEndsWith(pos.now, separators)
         pos.end-= (endChar || "").length
+
         res.push(pos.split())
         if(endChar) {
             pos.start = pos.end

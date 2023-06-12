@@ -24,6 +24,8 @@ import VariableAsignation, { VariableAsignationReturn } from "../parser/objects/
 import ClassConstr, { ClassConstrReturn } from "../parser/objects/class_construct.js";
 import ifStatement from "../parser/objects/ifStatement.js";
 
+export const validFileEncoding = ['ascii', 'utf8', 'utf-8', 'utf16le', 'ucs2', 'ucs-2', 'base64', 'base64url', 'latin1', 'binary', 'hex']
+
 export function variableAcceptedObjects(data: ParserClassData, allowKeywordNaming= false) {
     return [
         new Array(data), new BooleanTest(data), new Comparaison(data), new FunctionAsignation(data, allowKeywordNaming), new FunctionCall(data),

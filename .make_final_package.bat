@@ -1,8 +1,12 @@
 @echo off
-set /p v="version? (xx.xx.xx.xx) -> "
+echo Binarrizing project...
+call npm run binnarize
+
+clear
+set /p v="Package version? (xx.xx.xx.xx) -> "
 
 rem "^" character = command continues on the next line
-npx resedit ^
+call npx resedit ^
 	--i "bin/flylang.exe"  ^
 	--o "bin/flylang.exe" ^
 	--icon 1,"assets/flylang.ico" ^
@@ -14,4 +18,6 @@ npx resedit ^
 	--legal-copyright "Copyright FlyLang creator. MIT license." ^
 	--product-version "%v%" ^
 	--no-grow
+
+echo Operation finished!
 pause

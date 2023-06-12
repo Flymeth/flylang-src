@@ -89,7 +89,7 @@ export default function safeSplit(position: Positioner, spliters: string[] = rul
                 const next = before && !before.endsWith(rules.attribute_access_char) && position.global.slice(position.end - splitter.length)
                 
                 // This "if" statement if "<" is not a "<=" or if "1+-2" is not a "1+" "-2" or, in a string for exemple "&(data)..." (It is really important)
-                if(next && multipleStartsWith(next, spliters) === splitter && (!position.start || content.length > splitter.length)) {
+                if(next && multipleStartsWith(next, spliters) === splitter && (!position.start || content.trim().length > splitter.length)) {
                     foundSplitter = splitter
                     break
                 }

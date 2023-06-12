@@ -154,13 +154,12 @@ export default class Parser {
         const tester = removeComments(codeSimplifier(now) || "")
         if(!tester) return null
         
-        const objects = parsingObjects || data.objects        
+        const objects = parsingObjects || data.objects
         if(objects.length <= 1) objects[0].testScore(tester)
-
+        
         const sorted = objects.sort((a, b) => b.testScore(tester) - a.testScore(tester))
         const obj = sorted[0]
         if(obj.testedScore === -Infinity) return null
-        
         const focusedCode = removeComments(removeUselessPriorities(now) || "")
         if(!focusedCode) return null
         const result = await obj.parse(new Positioner(focusedCode, position, position.file))

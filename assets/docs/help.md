@@ -6,6 +6,7 @@ This document will show you the possibilities behind the `flylang` shell.
 flylang # Starts the "in-console" mode -> See the "in-console mode" section for more informations
 
 flylang --info # Diplays the language's informations
+flylang --changelog # Diplays the current/previous changes of the flylang interpreter
 flylang --help # Diplays this message
 flylang --syntax # Diplays informations about the language's syntax
 flylang --props # Diplays the current flylang interpreter behaviors' value

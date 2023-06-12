@@ -1,6 +1,5 @@
 import { inspect } from "util";
 import FunctionError from "../errors/interpreter/functionError";
-import RaiseFlyLangCompilerError from "../errors/raiseError";
 import { ArrayReturn } from "../parser/objects/array";
 import { AttrAccessReturn } from "../parser/objects/attr_access";
 import { ClassConstrReturn } from "../parser/objects/class_construct";
@@ -9,11 +8,13 @@ import { NumberReturn } from "../parser/objects/number";
 import { DictObjectReturn } from "../parser/objects/object";
 import { StringReturn } from "../parser/objects/string";
 import Parser, { ParsableObjectList } from "../parser/parser";
-import Interpreter, { ICM, UNDEFINED_TYPE } from "./interpreter";
+import Interpreter, { ICM, UNDEFINED_TYPE } from "./interpreter.js";
 import {BigNumber} from "bignumber.js";
 import stringify, { createStringObj } from "./stringify";
-import { join } from "path";
+import { join, parse } from "path";
 import RaiseCodeError from "../errors/raiseCodeError";
+import { validFileEncoding } from "../utils/registeries";
+import fs from "fs";
 
 export type methodObject<obj extends ParsableObjectList["data"]> = {
     variables: {[key: string]: (object: obj) => Promise<ParsableObjectList>},
@@ -48,6 +49,9 @@ export type cacheInterface = {
     workingAttrAccess?: AttrAccessReturn["data"]
 }
 export default function genDefaultCache(interpMethods: Interpreter): cacheInterface {
+    const filePath = interpMethods.currentPosition.file?.value || join(process.cwd(), "console.fly")
+    const mainPath = interpMethods.currentPosition.original.file?.value
+
     return {
         registered: {
             variables: {},
@@ -57,14 +61,12 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
         builtin: {
             variables: {
                 async __path() {
-                    const path = interpMethods.currentPosition.file?.value || join(process.cwd(), "console.fly")
-                    if(!path) return UNDEFINED_TYPE
-                    return createStringObj(path)
+                    if(!filePath) return UNDEFINED_TYPE
+                    return createStringObj(filePath)
                 },
                 async __main() {
-                    const path = interpMethods.currentPosition.original.file?.value
-                    if(!path) return UNDEFINED_TYPE
-                    return createStringObj(path)
+                    if(!mainPath) return UNDEFINED_TYPE
+                    return createStringObj(mainPath)
                 },
                 async debug() {
                     const depthRegistered= 10
@@ -121,6 +123,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     return createStringObj(stringType)
                 },
                 async eval(str, ..._) {
+                    str = await interpMethods.eval(str)
                     if(str.type !== "string") return UNDEFINED_TYPE
                     const strContent = (await interpMethods.eval(str) as StringReturn).data[0].data as string
                     const p = new Parser({type: "manualy", data: interpMethods.data})
@@ -129,6 +132,38 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     const parsed = await p.compile(strContent)
                     if(!parsed) return UNDEFINED_TYPE
                     return await interpMethods.process(parsed.content, true, false) || UNDEFINED_TYPE
+                },
+                async read(path, enc = {type: "string", data: [{type: "text", data: "utf-8"}]}, ..._) {
+                    path = await interpMethods.eval(path)
+                    if(path.type !== "string") throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Path argument missed or no type string.")).raise()
+                    enc = await interpMethods.eval(enc) as StringReturn
+                    const selectedEncoding = stringify(enc)
+                    if(!validFileEncoding.includes(selectedEncoding)) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Invalid encoding provided.")).raise()                    
+                    const parsedPath = join(parse(filePath).dir, stringify(path))
+                    if(!fs.existsSync(parsedPath)) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Invalid path provided.")).raise()
+                    
+                    const content = fs.readFileSync(parsedPath, selectedEncoding as BufferEncoding) // Checked above
+                    return createStringObj(content)
+                },
+                async write(path, data, mode = {type: "string", data: [{type: "text", data: "w"}]}, enc = {type: "string", data: [{type: "text", data: "utf-8"}]}, ..._) {
+                    path = await interpMethods.eval(path)
+                    if(path.type !== "string") throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Path argument missed or no type string.")).raise()
+                    data = await interpMethods.eval(data)
+                    if(data.type !== "string") throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Data argument missed or no type string.")).raise()
+                    
+                    enc = await interpMethods.eval(enc) as StringReturn
+                    const selectedEncoding = stringify(enc)
+                    if(!validFileEncoding.includes(selectedEncoding)) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Invalid encoding provided.")).raise()                    
+                    const parsedPath = join(parse(filePath).dir, stringify(path))
+
+                    const selectedMode = stringify(mode)
+                    if(!["w", "a"].includes(selectedMode)) throw new RaiseCodeError(interpMethods.currentPosition, new FunctionError("Invalid mode provided (can only be 'w' or 'a').")).raise()                    
+
+                    fs.writeFileSync(parsedPath, stringify(data), {
+                        encoding: selectedEncoding as BufferEncoding,
+                        flag: selectedMode
+                    }) // Checked above
+                    return UNDEFINED_TYPE
                 }
             },
             objects: {
@@ -210,11 +245,11 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     }
                 },
                 functions: {
-                    async asStr(nb, ..._) {
+                    async toStr(nb, ..._) {
                         return {type: "string", data: [{type: "text", data: nb.number.toFixed()}]}
                     },
                     async parseInt(nb) {
-                        return {type: "number", data: {negative: nb.negative, type: "integer", number: nb.number.integerValue()}}
+                        return {type: "number", data: {negative: nb.negative, type: "integer", number: nb.number.integerValue(BigNumber.ROUND_DOWN)}}
                     }
                 }
             },
@@ -243,7 +278,7 @@ export default function genDefaultCache(interpMethods: Interpreter): cacheInterf
                     }
                 },
                 functions: {
-                    async asNbr(args, ..._) {
+                    async toNbr(args, ..._) {
                         const content: string = (await Promise.all(args.map(async v => v.type === "data" ? stringify(await interpMethods.eval(v.data) || v.data) : v.data))).join('').trim()
                         const parsed = new BigNumber(content)
                         if(parsed.isNaN()) return UNDEFINED_TYPE

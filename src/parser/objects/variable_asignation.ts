@@ -51,6 +51,7 @@ export default class VariableAsignation extends CompilerObject {
         const parsedName = await FlyLang.parse(this.data, name, [
             new Variable(this.data), new Array(this.data, [new Variable(this.data)]), new AttrAccess(this.data)
         ]) as VariableNameType | null
+
         if(!parsedName) throw new RaiseCodeError(code, new SyntaxError("Can only set a variable to a variable name or an object's attribute.")).raise()
         if(
             parsedName.type === "variable" && rules.keywords.find(w => w === parsedName.data.name)

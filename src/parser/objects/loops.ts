@@ -32,13 +32,16 @@ export type LoopsReturn = {
         executor: ParserReturn["content"]
     }
 }
+
+const typesReg = RegExp_OR(loop_types)
+export const LoopsRegExp = {
+    fast: new RegExp(`${typesReg.source}\\s*\\(.+\\)`, "s"),
+    detailed: new RegExp(`(?<type>${typesReg.source})\\s*\\((?<inputs>.+)\\)`, "s")
+}
+
 export default class Loops extends CompilerObject {
     constructor(data: ParserClassData) {
-        const typesReg = RegExp_OR(loop_types)
-        super(data, "loop", `while(1, echo("lolilol")); for((1,2,3), i, v, echo(i, v))`, {
-            fast: new RegExp(`${typesReg.source}\\s*\\(.+\\)`, "s"),
-            detailed: new RegExp(`(?<type>${typesReg.source})\\s*\\((?<inputs>.+)\\)`, "s")
-        })
+        super(data, "loop", `while(1, echo("lolilol")); for({1,2,3}, i, v, std.out(i, v))`, LoopsRegExp)
         this.bonus_score+= 2
     }
 
@@ -67,6 +70,7 @@ export default class Loops extends CompilerObject {
         const compiler = new FlyLang({
             type: "manualy", data: this.data
         })
+
         const [firstArg, ...secondArgs] = splitted
         if(loopType === "for") {
             const iterator = await FlyLang.parse(this.data, firstArg)
@@ -96,6 +100,7 @@ export default class Loops extends CompilerObject {
             if(!condition) throw new RaiseCodeError(firstArg, new SyntaxError())
 
             const codeArgs = secondArgs[0]
+            
             const code = await compiler.compile(codeArgs)
             if(!code) throw new RaiseCodeError(codeArgs, new SyntaxError())
 

@@ -2,168 +2,102 @@
   "origin": {
     "file": {
       "path": "C:\\Users\\johan\\OneDrive\\Documents\\.perso\\Dev\\Files\\Languages\\FlyLang\\tests\\input.fly",
-      "content": "for(range(100), \r\n    if(gen < -10 ? gen > 10, stop \"erreur!!\")\r\n)"
+      "content": "content:: read(\"./_tests.js\")\r\nstd.out(content)"
     }
   },
   "content": [
     {
-      "type": "loop",
+      "type": "variable_asignation",
       "data": {
-        "type": "for",
-        "executor": [
-          {
-            "type": "if_statement",
-            "data": {
-              "type": "if",
-              "condition": {
-                "type": "boolean_test",
-                "data": {
-                  "test": "or",
-                  "testers": [
-                    {
-                      "type": "comparaison",
-                      "data": {
-                        "comparaison": {
-                          "name": "inf_strict",
-                          "invert": false
-                        },
-                        "operators": [
-                          {
-                            "type": "variable",
-                            "data": {
-                              "name": "gen"
-                            },
-                            "map": [
-                              25,
-                              29
-                            ]
-                          },
-                          {
-                            "type": "number",
-                            "data": {
-                              "type": "integer",
-                              "negative": true,
-                              "number": "-10"
-                            },
-                            "map": [
-                              30,
-                              34
-                            ]
-                          }
-                        ]
-                      },
-                      "map": [
-                        25,
-                        35
-                      ]
-                    },
-                    {
-                      "type": "comparaison",
-                      "data": {
-                        "comparaison": {
-                          "name": "sup_strict",
-                          "invert": false
-                        },
-                        "operators": [
-                          {
-                            "type": "variable",
-                            "data": {
-                              "name": "gen"
-                            },
-                            "map": [
-                              37,
-                              41
-                            ]
-                          },
-                          {
-                            "type": "number",
-                            "data": {
-                              "type": "integer",
-                              "negative": false,
-                              "number": "10"
-                            },
-                            "map": [
-                              42,
-                              45
-                            ]
-                          }
-                        ]
-                      },
-                      "map": [
-                        36,
-                        45
-                      ]
-                    }
-                  ]
-                },
+        "variable": {
+          "type": "variable",
+          "data": {
+            "name": "content"
+          },
+          "map": [
+            0,
+            8
+          ]
+        },
+        "constant": true,
+        "value": {
+          "type": "function_call",
+          "data": {
+            "name": "read",
+            "arguments": [
+              {
+                "type": "string",
+                "data": [
+                  {
+                    "type": "text",
+                    "data": "./_tests.js"
+                  }
+                ],
                 "map": [
-                  22,
-                  63
+                  15,
+                  28
                 ]
-              },
-              "code": [
-                {
-                  "type": "stopper",
-                  "data": {
-                    "type": "exec_kill",
-                    "scope": 0,
-                    "return": {
-                      "type": "string",
-                      "data": [
-                        {
-                          "type": "text",
-                          "data": "erreur!!"
-                        }
-                      ],
-                      "map": [
-                        52,
-                        62
-                      ]
-                    }
-                  },
-                  "map": [
-                    47,
-                    62
-                  ]
-                }
-              ]
-            },
-            "map": [
-              22,
-              63
+              }
             ]
-          }
-        ],
-        "iterator": {
-          "getter": {
-            "type": "function_call",
-            "data": {
-              "name": "range",
-              "arguments": [
-                {
-                  "type": "number",
-                  "data": {
-                    "type": "integer",
-                    "negative": false,
-                    "number": "100"
-                  },
-                  "map": [
-                    10,
-                    13
-                  ]
-                }
-              ]
-            },
-            "map": [
-              4,
-              15
-            ]
-          }
+          },
+          "map": [
+            8,
+            29
+          ]
         }
       },
       "map": [
         0,
-        66
+        29
+      ]
+    },
+    {
+      "type": "attribute_access",
+      "data": {
+        "origin": {
+          "fromScript": false,
+          "object": {
+            "type": "variable",
+            "data": {
+              "name": "std"
+            },
+            "map": [
+              31,
+              35
+            ]
+          }
+        },
+        "access": [
+          {
+            "fromScript": false,
+            "object": {
+              "type": "function_call",
+              "data": {
+                "name": "out",
+                "arguments": [
+                  {
+                    "type": "variable",
+                    "data": {
+                      "name": "content"
+                    },
+                    "map": [
+                      39,
+                      46
+                    ]
+                  }
+                ]
+              },
+              "map": [
+                35,
+                47
+              ]
+            }
+          }
+        ]
+      },
+      "map": [
+        31,
+        47
       ]
     }
   ]

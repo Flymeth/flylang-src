@@ -1,4 +1,10 @@
-# Flylang source changelog
+# Flylang changelog
+
+> 0.0.9-alpha
+
+* Fixed comment's regular expression critic ends
+* Fixed 'always true' comparaison
+* Fixed *invalid operand* error when multiplying with a negative number
 
 > 0.0.8-alpha
 

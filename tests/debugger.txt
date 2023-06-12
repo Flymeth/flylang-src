@@ -1,52 +1,31 @@
-#LOOP
-  TYPE: FOR
-  ITERATOR: 
+#VARIABLE_ASIGNATION
+  (SET AS CONSTANT)
+  STORED IN: 
+    #VARIABLE
+      NAME: content
+    #variable
+  VALUE: 
     #FUNCTION_CALL
-      FUNCTION: range
+      FUNCTION: read
       ARGUMENTS: 
-        #NUMBER
-          VALUE: 100
-        #number
+        #STRING
+          CONTENT:
+            "./_tests.js"
+        #string
     #function_call
-  EXECUTION: , : 
-    #IF_STATEMENT
-      CONDITION: 
-        #BOOLEAN_TEST
-          TYPE: or
-          COMPARATOR 1: 
-            #COMPARAISON
-              TYPE: inf_strict
-              COMPARATOR 1: 
-                #VARIABLE
-                  NAME: gen
-                #variable
-              COMPARATOR 2: 
-                #NUMBER
-                  VALUE: -10
-                #number
-            #comparaison
-          COMPARATOR 2: 
-            #COMPARAISON
-              TYPE: sup_strict
-              COMPARATOR 1: 
-                #VARIABLE
-                  NAME: gen
-                #variable
-              COMPARATOR 2: 
-                #NUMBER
-                  VALUE: 10
-                #number
-            #comparaison
-        #boolean_test
-      EXECUTION: 
-        #STOPPER
-          TYPE: exec_kill
-          SCOPE: This one
-          ENDING_VALUE: 
-            #STRING
-              CONTENT:
-                "erreur!!"
-            #string
-        #stopper
-    #if_statement
-#loop
+#variable_asignation
+#ATTRIBUTE_ACCESS
+  ORIGIN: 
+    #VARIABLE
+      NAME: std
+    #variable
+  ACCESS:
+    INDEX_VALUE: 
+      #FUNCTION_CALL
+        FUNCTION: out
+        ARGUMENTS: 
+          #VARIABLE
+            NAME: content
+          #variable
+      #function_call
+#attribute_access

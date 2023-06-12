@@ -54,7 +54,8 @@ const flyLangOutPath = args.getArgument(1)
     }else {
         const interpreter = new Interpreter(parser.data)
         await interpreter.process(jsonParsed.content)
-        
-        if(properties.getValue("inConsoleModeWhenFileExecuted")?.value === "1") interpreter.start_InConsoleMode()
+
+        if(properties.getValue("inConsoleModeWhenFileExecuted")?.value === "1") interpreter.fetchAndExecPrompt()
     }
+    process.exit(0) //? Sometimes process doesn't exit (When opening/writing a file for exemple)
 })()

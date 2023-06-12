@@ -2,7 +2,7 @@ import asignationError from "../errors/interpreter/asignationError.js"
 import FunctionError from "../errors/interpreter/functionError.js"
 import OperationError from "../errors/interpreter/operationError.js"
 import VariableError from "../errors/interpreter/variableError.js"
-import { setAllowErrors, setKillProcessWhenError } from "../errors/raiseError.js"
+import RaiseFlyLangCompilerError, { setAllowErrors, setKillProcessWhenError } from "../errors/raiseError.js"
 import { ArrayReturn } from "../parser/objects/array.js"
 import { ClassConstrReturn } from "../parser/objects/class_construct.js"
 import { FunctionAsignationReturn } from "../parser/objects/function_asignation.js"
@@ -12,7 +12,6 @@ import { StrictValueReturn } from "../parser/objects/strict_value.js"
 import { StringReturn } from "../parser/objects/string.js"
 import { ParsableObjectList, ParsedObject, ParserClassData, ParserReturn } from "../parser/parser.js"
 import Positioner from "../utils/positioner.js"
-import {Interface, createInterface} from "readline"
 import stringify, { createStringObj } from "./stringify.js"
 import AccessError from "../errors/interpreter/accessError.js"
 import ExecutionError from "../errors/interpreter/executionError.js"
@@ -26,10 +25,11 @@ import { join, parse } from "path"
 import safeSplit from "../utils/tools/safeSplit.js"
 import stripAnsi from "strip-ansi"
 import RaiseCodeError from "../errors/raiseCodeError.js"
-import { inspect } from "util"
 import chalk from "chalk";
 import ExitError from "../errors/interpreter/exitError.js"
 import { bigNumbersPow } from "./modules/maths.js"
+import FlylangConsole from "../utils/console.js"
+import { inspect } from "util"
 
 export const UNDEFINED_TYPE: StrictValueReturn = {type: "strict_value", data: {value: null}}
 let inConsoleMode = false
@@ -40,34 +40,25 @@ export const ICM = () => inConsoleMode
 export default class Interpreter {
     data: ParserClassData
     cache: cacheInterface
-    linereader: Interface
     currentPosition: Positioner
     consoleModeCache: {[key: string]: any}
 
     constructor(data: ParserClassData, consoleMode = false, parentPositioner?: Positioner) {
         this.data = data
-        this.linereader = createInterface({
-            input: process.stdin,
-            output: process.stdout,
-            terminal: true
-        })
-        this.linereader.pause()
+
         this.currentPosition = new Positioner(data.file.src.content || "", parentPositioner, data.file.src.path)
         this.cache= genDefaultCache(this)
         this.consoleModeCache= {}
 
-        if(consoleMode) this.start_InConsoleMode()
+        if(consoleMode) this.startConsoleMode()
     }
 
     async input(prompt: string) {
-        this.linereader.resume()
-        const v = await new Promise<string>(res => this.linereader.question(prompt + chalk.reset(), res))
-        this.linereader.pause()
-        return v
+        return FlylangConsole.input(prompt + chalk.reset())
     }
     async print(data: string) {
-        if(this.consoleModeCache.blockNextPrint) return this.consoleModeCache.blockNextPrint= false        
-        process.stdout.write(data + chalk.reset() + "\n")
+        if(this.consoleModeCache.blockNextPrint) return this.consoleModeCache.blockNextPrint= false
+        return FlylangConsole.writeLine(data + chalk.reset())
     }
     async clear() {
         console.clear()
@@ -200,6 +191,45 @@ export default class Interpreter {
         }
         return true
     }
+    async convertToNumber(element: ParsableObjectList): Promise<BigNumber | null> {
+        switch (element.type) {
+            case "array": {
+                return new BigNumber(element.data.values.length)
+            }
+            case "object": {
+                return new BigNumber(element.data.values.length)
+            }
+            case "string": {
+                const content = (await this.eval(element) as StringReturn).data[0].data as string // This function parse automatically the string and its content in the first string array
+                return new BigNumber(content.length)
+            }
+            case "number": {
+                return new BigNumber(element.data.number)
+            }
+            case "strict_value": {
+                return new BigNumber(!!element.data.value ? 1 : 0)
+            }
+        }
+        return null
+    }
+    
+    /**
+     * Sort object by his keys
+     * 
+     *! ATTENTION: if the object has a `map` key, it will be deleted in the resulting object.
+     */
+    sortObjectByKey(obj: {[key: string]: any}): object {
+        const sortedKeys = Object.keys(obj).sort()
+        const newObject: {[key: string]: any} = {}
+        
+        for(const key of sortedKeys) {
+            if(key === "map") continue
+
+            if(typeof obj[key] === "object") newObject[key] = this.sortObjectByKey(obj[key])
+            else newObject[key] = obj[key]
+        }
+        return newObject
+    }
 
     /**
      * Execute an instruction
@@ -207,7 +237,6 @@ export default class Interpreter {
      * @param referenceMode If true, object's data will be parsed and returns instead a reference of them self
      */
     async eval(instruction: ParsedObject): Promise<ParsableObjectList> {
-        if(this.linereader.line.at(-1) === "^C") console.log("need to stop!");
         if(instruction.map) this.currentPosition.indexes= instruction.map
 
         const {data, type} = instruction
@@ -391,61 +420,47 @@ export default class Interpreter {
                 }
             }
             case "comparaison": {
-                const getComparableValue = async (obj: ParsableObjectList): Promise<[string, BigNumber] | null> => {                    
-                    switch (obj.type) {
-                        case "array": {
-                            return [JSON.stringify(obj.data.values), new BigNumber(obj.data.values.length)]
-                        }
-                        case "object": {
-                            return [JSON.stringify(obj.data.values.map(e => e.key)), new BigNumber(obj.data.values.length)]
-                        }
-                        case "string": {
-                            const content = (await this.eval(obj) as StringReturn).data[0].data as string // This function parse automatically the string and its content in the first string array
-                            return [content, new BigNumber(content.length)]
-                        }
-                        case "number": {
-                            return [obj.data.number.toString(), obj.data.number]
-                        }
-                        case "strict_value": {
-                            return [obj.data.value ? "true" : "false", new BigNumber(!!obj.data.value ? 1 : 0)]
-                        }
-                    }
-                    return null
-                }
+                const parsed = [...data.operators]
 
-                const parsed = [await this.eval(data.operators[0]), await this.eval(data.operators[1])]
-                if(data.operators[0].type === "comparaison") {
-                    if(this.convertToBoolean(parsed[0])) parsed[0] = await this.eval(data.operators[0].data.operators[1])
+                if(parsed[0].type === "comparaison") {
+                    const result = await this.eval(parsed[0])
+                    if(this.convertToBoolean(result)) parsed[0] = await this.eval(parsed[0].data.operators[1])
+                    else return {type: "strict_value", data: {value: false}}
+                }else parsed[0] = await this.eval(parsed[0])
+
+                if(parsed[1].type === "comparaison") {
+                    const result = await this.eval(parsed[1])
+                    if(this.convertToBoolean(result)) parsed[1] = await this.eval(parsed[1].data.operators[0])
+                    else return {type: "strict_value", data: {value: false}}
+                }else parsed[1] = await this.eval(parsed[1])
+
+                if(data.comparaison.name === "egual") {
+                    if(data.operators.find(o => o.type === "strict_value")) return {type: "strict_value", data: {value: this.convertToBoolean(data.operators[0]) === this.convertToBoolean(data.operators[1])}}
+                    else return {type: "strict_value", data: {value: JSON.stringify(this.sortObjectByKey(data.operators[0])) === JSON.stringify(this.sortObjectByKey(data.operators[1]))}}
                 }
-                if(data.operators[1].type === "comparaison") {
-                    if(this.convertToBoolean(parsed[1])) parsed[1] = await this.eval(data.operators[1].data.operators[0])
-                }
+                
                 const operators = {
-                    first: await getComparableValue(parsed[0]),
-                    second: await getComparableValue(parsed[1])
+                    first: await this.convertToNumber(parsed[0]),
+                    second: await this.convertToNumber(parsed[1])
                 }
-                if(operators.first === null || operators.second === null) throw new RaiseCodeError(this.currentPosition, new OperationError("Types can't be compared.")).raise()
+                if(!(operators.first && operators.second)) throw new RaiseCodeError(this.currentPosition, new OperationError("Types can't be compared.")).raise()
                 
                 let res: StrictValueReturn | null = null
                 switch(data.comparaison.name) {
-                    case "egual": {
-                        res= {type: "strict_value", data: {value: operators.first[0] === operators.second[0]}}
-                        break;
-                    }
                     case "inf": {
-                        res= {type: "strict_value", data: {value: operators.first[1].isLessThanOrEqualTo(operators.second[1])}}
+                        res= {type: "strict_value", data: {value: operators.first.isLessThanOrEqualTo(operators.second)}}
                         break;
                     }
                     case "inf_strict": {
-                        res= {type: "strict_value", data: {value: operators.first[1].isLessThan(operators.second[1])}}
+                        res= {type: "strict_value", data: {value: operators.first.isLessThan(operators.second)}}
                         break;
                     }
                     case "sup": {
-                        res= {type: "strict_value", data: {value: operators.first[1].isGreaterThanOrEqualTo(operators.second[1])}}
+                        res= {type: "strict_value", data: {value: operators.first.isGreaterThanOrEqualTo(operators.second)}}
                         break;
                     }
                     case "sup_strict": {
-                        res= {type: "strict_value", data: {value: operators.first[1].isGreaterThan(operators.second[1])}}
+                        res= {type: "strict_value", data: {value: operators.first.isGreaterThan(operators.second)}}
                         break;
                     }
                 }
@@ -460,7 +475,7 @@ export default class Interpreter {
                     first: await this.eval(data.operators[0]) || data.operators[0],
                     second: await this.eval(data.operators[1]) || data.operators[1]
                 }
-
+                
                 if(data.operation === "addition") {
                     if(operations.first.type === operations.second.type) {
                         // Bellow there is "as ..." because the 2 operators are the same and ts/intelisense doens't understand that.
@@ -730,8 +745,12 @@ export default class Interpreter {
 
                     const conditionNeedToBe = type === "while" // 'until' -> conditionNeedToBe 'true'; else -> conditionNeedToBe 'false' (= while)
 
-                    const isValid = async () => this.convertToBoolean(await this.eval(condition))                    
+                    const isValid = async () => {
+                        const res = await this.eval(condition)
+                        return this.convertToBoolean(res)
+                    }
                     let iterationCount = 0
+
                     while(await isValid() === conditionNeedToBe) {
                         if(iterationCount >= maxLoopIteration) throw new RaiseCodeError(this.currentPosition, new ExecutionError(`Max iteration count (${maxLoopIteration}) has been reached.`)).raise()
                         
@@ -841,31 +860,32 @@ export default class Interpreter {
                     const module = await moduleFct(this)
                     const {affectedTo, restrictions} = informations
 
-                    if(restrictions) {
-                        for(const name in module.variables) {
-                            if(!restrictions.includes(name)) delete module.variables[name]
-                        }
-                        for(const name in module.functions) {
-                            if(!restrictions.includes(name)) delete module.functions[name]
-                        }
-                        for(const name in module.objects) {
-                            if(!restrictions.includes(name)) delete module.objects[name]
-                        }
-                    }
-
                     if(affectedTo) {
                         const obj: cacheInterface["builtin"]["objects"][string] = this.cache.builtin.objects[affectedTo?.data.name || ""] || {
                             data: {functions: {}, objects: {}, variables: {}}
                         }
-                        for(const name in module.variables) obj.data.variables[name]= module.variables[name]
-                        for(const name in module.functions) obj.data.functions[name]= module.functions[name]
-                        for(const name in module.objects) obj.data.objects[name]= module.objects[name]
+
+                        for(const name in module.variables) {
+                            if(!restrictions || restrictions.includes(name)) obj.data.variables[name]= module.variables[name]
+                        }
+                        for(const name in module.functions) {
+                            if(!restrictions || restrictions.includes(name)) obj.data.functions[name]= module.functions[name]
+                        }
+                        for(const name in module.objects) {
+                            if(!restrictions || restrictions.includes(name)) obj.data.objects[name]= module.objects[name]
+                        }
 
                         this.cache.builtin.objects[affectedTo.data.name]= obj
                     } else {
-                        for(const name in module.variables) this.cache.builtin.variables[name]= module.variables[name]
-                        for(const name in module.functions) this.cache.builtin.functions[name]= module.functions[name]
-                        for(const name in module.objects) this.cache.builtin.objects[name]= module.objects[name]
+                        for(const name in module.variables) {
+                            if(!restrictions || restrictions.includes(name)) this.cache.builtin.variables[name]= module.variables[name]
+                        }
+                        for(const name in module.functions) {
+                            if(!restrictions || restrictions.includes(name)) this.cache.builtin.functions[name]= module.functions[name]
+                        }
+                        for(const name in module.objects) {
+                            if(!restrictions || restrictions.includes(name)) this.cache.builtin.objects[name]= module.objects[name]
+                        }
                     }
                 }
 
@@ -881,7 +901,6 @@ export default class Interpreter {
                         await this.evalFunction(handler.data, handler.data.arguments?.length ? [
                             err ? createStringObj(stripAnsi(`${err}`)) : UNDEFINED_TYPE
                         ] : [])
-
                     }
                 }
                 setAllowErrors(true)
@@ -972,43 +991,51 @@ export default class Interpreter {
     }
 
     //? In-console mode methods //
-    async start_InConsoleMode(): Promise<void> {
+    async startConsoleMode() {
+        await await this.print([
+            "--------------------------",
+            "| Flylang - console mode |",
+            "--------------------------"
+        ].join('\n'))
+        return this.fetchAndExecPrompt()
+    }
+    async fetchAndExecPrompt(): Promise<void> {
         inConsoleMode= true
         setKillProcessWhenError(false)
-        const input = await this.consoleModeInput()
-        if(input.startsWith('//')) return this.exec_InConsoleCmd(input.slice(2).trim())
+        const input = await this.fetchPrompt()
+        if(input.startsWith('//')) return this.execCommandPrompt(input.slice(2).trim())
 
         if(input.trim()) {
             this.currentPosition = new Positioner(input, undefined, this.currentPosition.file)
             try {
                 const evaluated = await this.cache.builtin.functions['eval']({type: "string", data: [{type: "text", data: input}]})
-                this.print(stringify(evaluated, true))
+                await this.print(stringify(evaluated, true))
             } catch (_) { }
         }
 
-        return this.start_InConsoleMode()
+        return this.fetchAndExecPrompt()
     }
-    async consoleModeInput(prefix= "[FLYLANG]", prec = ""): Promise<string> {
+    async fetchPrompt(prefix= "[FLYLANG]", prec = ""): Promise<string> {
         let input = prec + await this.input(prefix + "> ")
         try {
             setAllowErrors(false)
             safeSplit(new Positioner(input))
         } catch (_) {
-            return await this.consoleModeInput(`${" ".repeat(prefix.length)}`, `${input}\n`)
+            return await this.fetchPrompt(`${" ".repeat(prefix.length)}`, `${input}\n`)
         }
 
         setAllowErrors(true)
         return input
     }
 
-    async exec_InConsoleCmd(cmd: string): Promise<void> {
+    async execCommandPrompt(cmd: string): Promise<void> {
         const helpCmd = "help -> Display this message\n"
                         + "clear -> Clear the console\n"
                         + "exit -> Exit the console mode"
 
         switch(cmd) {
             case "help": {
-                this.print(helpCmd)
+                await this.print(helpCmd)
                 break;
             }
             case "clear": {
@@ -1017,13 +1044,13 @@ export default class Interpreter {
                 break;
             }
             case "exit": {
-                return
+                return process.exit(0)
             }
             default: {
-                this.print("This command doesn't exist.")
+                await this.print("This command doesn't exist.")
                 break;
             }
         }
-        return this.start_InConsoleMode()
+        return this.fetchAndExecPrompt()
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "flylang",
-  "version": "0.0.8-alpha",
+  "version": "0.0.9-alpha",
   "description": "My first programing language compiler",
   "main": "dist/main.js",
   "scripts": {
@@ -21,6 +21,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/marked-terminal": "^3.1.3",
+    "@types/mute-stream": "^0.0.1",
     "@types/node": "^18.11.10",
     "@types/ps-node": "^0.1.1",
     "pkg": "^5.8.0"
@@ -28,7 +29,8 @@
   "pkg": {
     "assets": [
       "assets/**/*",
-      "./readme.md"
+      "./readme.md",
+      "./changelog.md"
     ],
     "scripts": [
       "dist/**/*.json",
@@ -36,6 +38,7 @@
     ]
   },
   "dependencies": {
+    "@inquirer/prompts": "^1.0.3",
     "bignumber.js": "^9.1.1",
     "chalk": "4.1.2",
     "marked-terminal": "^5.1.1",

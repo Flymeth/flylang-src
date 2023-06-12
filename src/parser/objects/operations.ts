@@ -27,7 +27,7 @@ export default class Operation extends CompilerObject {
             detailed: new RegExp(`(?:.*?(?<!\\${rules.attribute_access_char}\\s*)${operationReg.source}.+)+`)
         })
         
-        this.bonus_score-= 3
+        this.bonus_score-= 4
     }
 
     async parse(code: Positioner): Promise<OperationReturn | null> {
@@ -41,7 +41,7 @@ export default class Operation extends CompilerObject {
 
             const parsedNumber = await new Number(this.data).parse(new Positioner("0"))
             if(!parsedNumber) throw new RaiseFlyLangCompilerError(new CompilerError()).raise()
-
+            
             const parsedData = await FlyLang.parse(this.data, code.take(data.join('')), variableAcceptedObjects(this.data))
             if(!parsedData) throw new RaiseCodeError(code, new SyntaxError("Operand is invalid.")).raise()
 
@@ -56,7 +56,7 @@ export default class Operation extends CompilerObject {
                 }
             }
         }
-
+        
         const parsed = separated && await handleRecursiveSeparate<OperationReturn>(separated, async (symbol, before, after) => {
             const operation: typeof rules.operations[number] | undefined = validOperations.find(e => e.symbol === symbol.now)
             if(!operation) throw new RaiseCodeError(symbol, new SyntaxError("Operator isn't valid."))

@@ -45,7 +45,6 @@ export default class Positioner {
             
             this.relatives= {
                 parent: {object: parent, position: [...parent.borns]},
-                
                 global: {object: parent.relatives?.global.object || parent, position: positionAsGlobal}
             }
 
@@ -221,7 +220,6 @@ export default class Positioner {
     clone(): Positioner {
         const newP = new Positioner(this.global, this, this.file)
         newP.indexes = this.indexes
-
         return newP
     }
 }
